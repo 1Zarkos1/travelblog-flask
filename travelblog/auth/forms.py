@@ -34,13 +34,20 @@ class RegistrationForm(FlaskForm):
             raise ValidationError('Please choose another email.')
 
 
-class ResetPasswordRequestForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email()])
+class RequestPasswordResetForm(FlaskForm):
+    email = EmailField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Request Password Reset')
+
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user is None:
+            raise ValidationError('There is no user with this email.')
 
 
 class ResetPasswordForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])
-    password2 = PasswordField(
-        'Repeat Password', validators=[DataRequired(), EqualTo('password')])
-    submit = SubmitField('Reset Password')
+    password_repeat = PasswordField(
+        'Repeat Password', validators=[DataRequired(),
+                                       EqualTo('password',
+                                               'Your passwords do not match')])
+    submit = SubmitField('Reset password')

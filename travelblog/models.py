@@ -1,5 +1,5 @@
 import json
-from datetime import datetime as dt
+from datetime import datetime as dt, timedelta
 from hashlib import md5
 from time import time
 
@@ -62,6 +62,21 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+    def make_token(self):
+        payload = {'exp': dt.utcnow()+timedelta(hours=1), 'iat': dt.utcnow(),
+                   'id': self.id}
+        return jwt.encode(
+            payload, current_app.config['SECRET_KEY'], 'HS256').decode('utf-8')
+
+    @staticmethod
+    def process_token(token):
+        try:
+            id = jwt.decode(
+                token, current_app.config['SECRET_KEY'], 'HS256')['id']
+        except:
+            return None
+        return User.query.get(id)
+
 @login.user_loader
 def load_user(id):
     return User.query.get(id)
@@ -105,7 +120,6 @@ class Country(db.Model):
     def __repr__(self):
         return f'<Country {self.name}>'
 
-
     @staticmethod
     def get_country_list():
         with current_app.app_context():
@@ -122,8 +136,8 @@ class CountryInfo(db.Model):
     language = db.Column(db.String(30))
     time_zone = db.Column(db.String(50))
     weather = db.Column(db.Text(600))
-    # description = db.Column(db.Text(2000))
-    # region = db.Column(db.String(20))
+    description = db.Column(db.Text(2000))
+    region = db.Column(db.String(20))
     last_updated = db.Column(db.DateTime(), default=dt.utcnow)
 
     def __repr__(self):
@@ -152,8 +166,7 @@ class Article(db.Model):
 
 class Comment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    article_id = db.Column(db.Integer, db.ForeignKey('article.id'),
-                           primary_key=True)
+    article_id = db.Column(db.Integer, db.ForeignKey('article.id'))
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     body = db.Column(db.Text(2000), nullable=False)
 

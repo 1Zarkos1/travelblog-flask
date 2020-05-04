@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 
 {% block content %}
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
     {% for article in articles %}
         <a href="{{ url_for('main.user', username=article.article_author.username) }}"></a>
         <div>
