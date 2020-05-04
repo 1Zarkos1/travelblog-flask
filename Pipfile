@@ -1,0 +1,32 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+ipykernel = "*"
+
+[packages]
+flake8 = "*"
+pytest = "*"
+autopep8 = "*"
+flask = "*"
+sqlalchemy = "*"
+flask-sqlalchemy = "*"
+python-dotenv = "*"
+flask-wtf = "*"
+flask-login = "*"
+flask-migrate = "*"
+flask-mail = "*"
+pyjwt = "*"
+flask-moment = "*"
+flask-babel = "*"
+guess-language-spirit = "*"
+request = "*"
+requests = "*"
+rq = "*"
+email-validator = "*"
+bs4 = "*"
+
+[requires]
+python_version = "3.8"

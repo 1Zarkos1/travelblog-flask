@@ -1,0 +1,164 @@
+import json
+from datetime import datetime as dt
+from hashlib import md5
+from time import time
+
+import jwt
+from flask import current_app
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+
+from travelblog import db, login
+
+
+country_visitor_relation = db.Table(
+    'country_visitor',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'),
+              primary_key=True),
+    db.Column('country_id', db.Integer, db.ForeignKey('country.id'),
+              primary_key=True))
+
+
+country_follower_relation = db.Table(
+    'country_follower',
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'),
+              primary_key=True),
+    db.Column('country_id', db.Integer, db.ForeignKey('country.id'),
+              primary_key=True))
+
+
+country_articletags_relation = db.Table(
+    'country_tag',
+    db.Column('article_id', db.Integer, db.ForeignKey('article.id'),
+              primary_key=True),
+    db.Column('country_id', db.Integer, db.ForeignKey('country.id'),
+              primary_key=True))
+
+
+class User(UserMixin, db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), index=True, unique=True)
+    email = db.Column(db.String(120), index=True, unique=True)
+    password_hash = db.Column(db.String(128))
+
+    info = db.relationship('UserInfo', backref='user', uselist=False)
+    comments = db.relationship('Comment', backref='comment_author')
+    articles = db.relationship('Article', backref='article_author')
+
+    follow_country = db.relationship(
+        'Country', secondary=country_follower_relation, lazy='subquery',
+        backref=db.backref('followers', lazy=True))
+
+    visit_country = db.relationship(
+        'Country', secondary=country_visitor_relation, lazy='subquery',
+        backref=db.backref('visitors', lazy=True))
+
+    def __repr__(self):
+        return f'<User {self.username}>'
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+@login.user_loader
+def load_user(id):
+    return User.query.get(id)
+
+
+class UserInfo(db.Model):
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
+                        primary_key=True)
+    birthdate = db.Column(db.Date())
+    avatar = db.Column(db.String(120))
+    gender = db.Column(db.String(1))
+    job = db.Column(db.String(60))
+    origin_country = db.Column(db.String(60))
+    about = db.Column(db.Text(600))
+    registration_date = db.Column(db.Date(), default=dt.utcnow)
+    last_seen = db.Column(db.DateTime(), default=dt.utcnow)
+
+    def __repr__(self):
+        return f'<Info about {self.user.username}>'
+
+
+class Country(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(60), index=True, unique=True)
+    code = db.Column(db.String(2), index=True, unique=True)
+
+    info = db.relationship('CountryInfo', backref='country', uselist=False)
+
+    visited_by = db.relationship(
+        'User', secondary=country_visitor_relation, lazy='subquery',
+        backref=db.backref('visited_countries', lazy=True))
+
+    followed_by = db.relationship(
+        'User', secondary=country_follower_relation, lazy='subquery',
+        backref=db.backref('followed_countries', lazy=True))
+
+    artic = db.relationship(
+        'Article', secondary=country_articletags_relation, lazy='subquery',
+        backref=db.backref('country_tags', lazy=True))
+
+    def __repr__(self):
+        return f'<Country {self.name}>'
+
+
+    @staticmethod
+    def get_country_list():
+        with current_app.app_context():
+            return Country.query.all()
+
+
+class CountryInfo(db.Model):
+    country_id = db.Column(db.Integer, db.ForeignKey('country.id'),
+                           primary_key=True)
+    capital = db.Column(db.String(20))
+    population = db.Column(db.Integer)
+    land_area = db.Column(db.Integer)
+    currency = db.Column(db.String(40))
+    language = db.Column(db.String(30))
+    time_zone = db.Column(db.String(50))
+    weather = db.Column(db.Text(600))
+    # description = db.Column(db.Text(2000))
+    # region = db.Column(db.String(20))
+    last_updated = db.Column(db.DateTime(), default=dt.utcnow)
+
+    def __repr__(self):
+        return f'<Info about {self.country.name}>'
+
+
+class Article(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    body = db.Column(db.Text(100000), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    article_type = db.Column(db.String(10))
+    date_posted = db.Column(db.DateTime(), default=dt.utcnow)
+    last_updated = db.Column(db.DateTime())
+
+    comments = db.relationship('Comment', backref='article')
+
+    tags = db.relationship(
+        'Country', secondary=country_articletags_relation, lazy='subquery',
+        backref=db.backref('articles', lazy=True))
+
+    def __repr__(self):
+        return (f'<Article {self.id} title {self.title}'
+                f'by user {self.article_author.username}')
+
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    article_id = db.Column(db.Integer, db.ForeignKey('article.id'),
+                           primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    body = db.Column(db.Text(2000), nullable=False)
+
+    date_posted = db.Column(db.DateTime(), default=dt.utcnow)
+    last_updated = db.Column(db.DateTime())
+
+    def __repr__(self):
+        return f'<Comment №{self.id} on post {self.article.title}>'

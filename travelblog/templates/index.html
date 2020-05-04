@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% for article in articles %}
+        <a href="{{ url_for('main.user', username=article.article_author.username) }}"></a>
+        <div>
+            <h2>{{ article.title }}</h2>
+            <div>
+                {{ article.body }}
+            </div>
+            <small>
+                {% for country in article.country_tags %}
+                    {{ country.name }}
+                {% endfor %}
+            </small>
+        </div>
+    {% endfor %}
+{% endblock %}

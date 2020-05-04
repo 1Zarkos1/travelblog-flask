@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+        <div class="user-profile">
+            <div class="user-profile-info">
+                <div class="country-profile-field">
+                    Name: {{ country.name }}
+                </div>
+                <div class="country-profile-field">
+                    Code: {{ country.code }}
+                </div>
+                <div class="country-profile-field">
+                    Population: {{ country.info.population }}
+                </div>
+            </div>
+        </div>
+{% endblock content %}

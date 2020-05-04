@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% for country in countries %}
+    <div>
+        <a href="{{ url_for('main.country_view', country_id=country.id) }}">
+            {{ country.name }}
+        </a>
+    </div>
+    {% endfor %}
+{% endblock %}
