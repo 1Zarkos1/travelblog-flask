@@ -51,3 +51,8 @@ footer {
     display: flex;
     justify-content: left;
 }
+
+.user-profile-img {
+    flex-grow: unset;
+    align-self: center;
+}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block content %}
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+        <article>
+            <h2>{{ article.title }}</h2>
+            <div>
+                {{ article.body }}
+            </div>
+            <small>
+                {% for country in article.country_tags %}
+                    {{ country.name }}
+                {% endfor %}
+            </small>
+            <div>
+                by <a href="{{ url_for('main.user', username=article.article_author.username) }}">{{ article.article_author.username }}</a> on {{ article.date_posted }}
+            </div>
+        </article>
+        <hr/ >
+        <section class="comments">
+            {% for comment in article.comments %}
+                <div class="comment">
+                    <div>
+                        <small>{{ comment.id }}</small>
+                    </div>
+                    <div>
+                        {{ comment.body }}
+                    </div>
+                    <div>
+                        <small>by <a href="{{ url_for('main.user', username=article.article_author.username) }}">{{ article.article_author.username }}</a> on {{ article.date_posted }}</small>
+                    </div>
+                </div>
+            {% endfor %}
+        </section>
+        <hr/ >
+        <div>
+            <form action="" method="POST">
+                {{ form.hidden_tag() }}
+                <legend>
+                    Leave your comment
+                </legend>
+                <div class="form-group">
+                    {{ form.comment.label }}
+                    {{ form.comment(class_='form-control') }}
+                    {% for error in form.comment.errors %}
+                    <div class="text-danger">
+                        <small>[{{ error }}]</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    {{ form.submit(class_='btn btn-primary') }}
+                </div>
+            </form>
+        </div>
+{% endblock content %}

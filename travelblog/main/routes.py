@@ -1,13 +1,13 @@
 import os
 from datetime import datetime
 
-from flask import render_template, redirect, request, url_for, flash
+from flask import render_template, redirect, request, url_for, flash, abort
 from flask_login import current_user, login_required
 
 from travelblog.main import bp
 from travelblog import db
-from travelblog.models import User, Country, Article
-from travelblog.main.forms import EditProfileForm, ArticleForm
+from travelblog.models import User, Country, Article, Comment
+from travelblog.main.forms import EditProfileForm, ArticleForm, CommentForm
 
 
 @bp.before_request
@@ -37,9 +37,22 @@ def create_article():
                           body=form.body.data)
         db.session.add(article)
         db.session.commit()
-        flash('Your message was added successfully!', category='info')
+        flash('Your article was added successfully!', category='info')
         return redirect(url_for('main.index'))
     return render_template('create_article.html', form=form)
+
+
+@bp.route('/article/<int:id>/', methods=['GET', 'POST'])
+def article_view(id):
+    article = Article.query.filter_by(id=id).first_or_404()
+    form = CommentForm()
+    if form.validate_on_submit():
+        comment = Comment(article=article, comment_author=current_user,
+                          body=form.comment.data)
+        db.session.add(comment)
+        db.session.commit()
+        return redirect(url_for('main.article_view', id=id))
+    return render_template('article.html', form=form, article=article)
 
 
 @bp.route('/news/')
@@ -109,7 +122,6 @@ def edit_profile():
         if avatar_file.filename:
             filename, file_extension = os.path.splitext(avatar_file.filename)
             img_name = f'{current_user.username.lower()}{file_extension}'
-            print(os.getcwd())
             avatar_file.save(f'travelblog/static/img/avatars/{img_name}')
             user_info.avatar = img_name
         user_info.birthdate = form.birthdate.data

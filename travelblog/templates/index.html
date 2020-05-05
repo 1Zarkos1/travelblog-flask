@@ -13,7 +13,7 @@
     {% for article in articles %}
         <a href="{{ url_for('main.user', username=article.article_author.username) }}"></a>
         <div>
-            <h2>{{ article.title }}</h2>
+            <h2><a href="{{ url_for('main.article_view', id=article.id) }}">{{ article.title }}</a></h2>
             <div>
                 {{ article.body }}
             </div>

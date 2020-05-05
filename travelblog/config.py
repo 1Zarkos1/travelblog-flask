@@ -19,6 +19,7 @@ class Config:
     MAIL_USE_TLS = environ.get('MAIL_USE_TLS') is not None
     MAIL_USERNAME = environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = environ.get('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = ('Zarkos', 'mail@travelblog.com')
     ADMINS = ['zarkos@mail.ru']
 
     """Custom config"""

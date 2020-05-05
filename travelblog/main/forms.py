@@ -31,3 +31,8 @@ class ArticleForm(FlaskForm):
                                        for country in Country.get_country_list()])
     body = TextAreaField('Post body')
     submit = SubmitField('Post')
+
+
+class CommentForm(FlaskForm):
+    comment = TextAreaField('Your comment')
+    submit = SubmitField('Leave comment')

@@ -40,6 +40,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
+    confirmed = db.Column(db.Boolean(), default=False)
 
     info = db.relationship('UserInfo', backref='user', uselist=False)
     comments = db.relationship('Comment', backref='comment_author')
@@ -86,7 +87,7 @@ class UserInfo(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
                         primary_key=True)
     birthdate = db.Column(db.Date())
-    avatar = db.Column(db.String(120))
+    avatar = db.Column(db.String(120), default='default.png')
     gender = db.Column(db.String(1))
     job = db.Column(db.String(60))
     origin_country = db.Column(db.String(60))
