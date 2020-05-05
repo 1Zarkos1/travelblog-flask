@@ -20,7 +20,6 @@ class Config:
     MAIL_USERNAME = environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = ('Zarkos', 'mail@travelblog.com')
-    ADMINS = ['zarkos@mail.ru']
 
     """Custom config"""
     POSTS_PER_PAGE = 5
