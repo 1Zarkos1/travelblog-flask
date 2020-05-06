@@ -27,6 +27,7 @@ def signup():
         db.session.commit()
         link = request.host_url + \
             url_for('auth.confirm_email', token=new_user.make_token())
+        print(link)
         send_mail(new_user, 'email', link)
         flash('Confirmation message has been sent to your email', category='info')
         return redirect(url_for('auth.login'))

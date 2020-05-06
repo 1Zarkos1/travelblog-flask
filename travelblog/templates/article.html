@@ -23,6 +23,13 @@
                 by <a href="{{ url_for('main.user', username=article.article_author.username) }}">{{ article.article_author.username }}</a> on {{ article.date_posted }}
             </div>
         </article>
+        {% if current_user.is_anonymous %}
+            {{ likes }}
+        {% elif article in current_user.liked_articles %}
+            {{ likes }} - <a href="{{ url_for('main.like_article', article_id=article.id) }}">Go-off</a>
+        {% else %}
+            {{ likes }} - <a href="{{ url_for('main.like_article', article_id=article.id) }}">Like</a>
+        {% endif %}
         <hr/ >
         <section class="comments">
             {% for comment in article.comments %}

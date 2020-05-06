@@ -20,7 +20,7 @@ def before_request():
 @bp.route('/')
 @bp.route('/index/')
 def index():
-    articles = Article.query.order_by(Article.date_posted.desc()).all()
+    articles = Article.query.order_by(Article.date_posted.desc()).paginate()
     return render_template('index.html', articles=articles)
 
 
@@ -45,6 +45,7 @@ def create_article():
 @bp.route('/article/<int:id>/', methods=['GET', 'POST'])
 def article_view(id):
     article = Article.query.filter_by(id=id).first_or_404()
+    likes = len(article.likes)
     form = CommentForm()
     if form.validate_on_submit():
         comment = Comment(article=article, comment_author=current_user,
@@ -52,7 +53,8 @@ def article_view(id):
         db.session.add(comment)
         db.session.commit()
         return redirect(url_for('main.article_view', id=id))
-    return render_template('article.html', form=form, article=article)
+    return render_template('article.html', form=form, article=article,
+                           likes=likes)
 
 
 @bp.route('/news/')
@@ -106,7 +108,8 @@ def about_me():
 @bp.route('/user/<username>/')
 def user(username):
     user = User.query.filter_by(username=username).first_or_404()
-    return render_template('profile.html', user=user)
+    articles = Article.query.filter_by(article_author=user).paginate()
+    return render_template('profile.html', user=user, articles=articles)
 
 
 @bp.route('/edit_profile/', methods=['GET', 'POST'])
@@ -132,3 +135,15 @@ def edit_profile():
         db.session.commit()
         return redirect(url_for('main.user', username=current_user.username))
     return render_template('edit_profile.html', form=form)
+
+
+@bp.route('/like_article/<int:article_id>')
+@login_required
+def like_article(article_id):
+    article = Article.query.get(article_id)
+    if current_user in article.likes:
+        article.likes.remove(current_user)
+    else:
+        article.likes.append(current_user)
+    db.session.commit()
+    return redirect(url_for('main.article_view', id=article_id))

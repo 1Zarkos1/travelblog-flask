@@ -10,18 +10,28 @@
         {% endfor %}
     {% endif %}
     {% endwith %}
-    {% for article in articles %}
-        <a href="{{ url_for('main.user', username=article.article_author.username) }}"></a>
-        <div>
-            <h2><a href="{{ url_for('main.article_view', id=article.id) }}">{{ article.title }}</a></h2>
-            <div>
-                {{ article.body }}
-            </div>
-            <small>
-                {% for country in article.country_tags %}
-                    {{ country.name }}
-                {% endfor %}
-            </small>
-        </div>
-    {% endfor %}
+    {% for article in articles.items %}
+        {% include '_article.html' %}
+    {% endfor %}<hr/ >
+    <div class=pagination>
+        {% if articles.has_prev %}
+            <a href="{{ url_for('main.index', page=articles.prev_num) }}">Back</a>
+        {% endif %}
+        {% for page in articles.iter_pages() %}
+            {% if page %}
+                {% if page != articles.page %}
+                    <a href="{{ url_for('main.index', page=page) }}">{{ page }}</a>
+                {% else %}
+                    <strong>{{ page }}</strong>
+                {% endif %}
+            {% else %}
+                <span class=ellipsis>…</span>
+            {% endif %}
+        {% endfor %}
+        {% if articles.has_next %}
+            <a href="{{ url_for('main.index', page=articles.next_num) }}">Forward</a>
+        {% endif %}
+    </div>
+
 {% endblock %}
+

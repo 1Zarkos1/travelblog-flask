@@ -1,0 +1,12 @@
+<a href="{{ url_for('main.user', username=article.article_author.username) }}"></a>
+<div>
+    <h2><a href="{{ url_for('main.article_view', id=article.id) }}">{{ article.title }}</a></h2>
+    <div>
+        {{ article.body }}
+    </div>
+    <small>
+        {% for country in article.country_tags %}
+            {{ country.name }}
+        {% endfor %}
+    </small>
+</div>
