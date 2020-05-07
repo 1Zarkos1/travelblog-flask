@@ -20,7 +20,9 @@ def before_request():
 @bp.route('/')
 @bp.route('/index/')
 def index():
-    articles = Article.query.order_by(Article.date_posted.desc()).paginate()
+    page = request.args.get('page', 1, type=int)
+    articles = Article.query.order_by(
+        Article.date_posted.desc()).paginate(page=page, per_page=2)
     return render_template('index.html', articles=articles)
 
 
@@ -42,10 +44,31 @@ def create_article():
     return render_template('create_article.html', form=form)
 
 
+@bp.route('/edit_article/<int:id>', methods=['GET', 'POST'])
+@login_required
+def edit_article(id):
+    article = Article.query.filter_by(id=id).first_or_404()
+    if current_user != article.article_author:
+        abort(403)
+    form = ArticleForm(article_type=article.article_type, title=article.title,
+                       country_tag=article.country_tags, body=article.body)
+    if form.validate_on_submit():
+        country = Country.query.filter(
+            Country.name.in_(form.country_tag.data)).all()
+        article.country_tags = country
+        article.title = form.title.data
+        article.article_type = form.article_type.data
+        article.body = form.body.data
+        article.last_updated = datetime.utcnow()
+        db.session.commit()
+        flash('Your article was updated!', category='info')
+        return redirect(url_for('main.article_view', id=id))
+    return render_template('edit_article.html', form=form, id=id)
+
+
 @bp.route('/article/<int:id>/', methods=['GET', 'POST'])
 def article_view(id):
     article = Article.query.filter_by(id=id).first_or_404()
-    likes = len(article.likes)
     form = CommentForm()
     if form.validate_on_submit():
         comment = Comment(article=article, comment_author=current_user,
@@ -53,8 +76,7 @@ def article_view(id):
         db.session.add(comment)
         db.session.commit()
         return redirect(url_for('main.article_view', id=id))
-    return render_template('article.html', form=form, article=article,
-                           likes=likes)
+    return render_template('article.html', form=form, article=article)
 
 
 @bp.route('/news/')
@@ -88,10 +110,13 @@ def countries():
     return render_template('country_list.html', countries=country_list)
 
 
-@bp.route('/country/<country_id>')
-def country_view(country_id):
-    country = Country.query.get(country_id)
-    return render_template('country.html', country=country)
+@bp.route('/country/<int:id>/')
+def country_view(id):
+    page = request.args.get('page', 1, type=int)
+    country = Country.query.get(id)
+    articles = country.articles.paginate(page=page, per_page=2)
+    print(articles.prev_num)
+    return render_template('country.html', country=country, articles=articles)
 
 
 @bp.route('/gear/')
@@ -137,13 +162,29 @@ def edit_profile():
     return render_template('edit_profile.html', form=form)
 
 
-@bp.route('/like_article/<int:article_id>')
+@bp.route('/likes_control/<int:article_id>/<action>/')
 @login_required
-def like_article(article_id):
+def likes_control(article_id, action):
     article = Article.query.get(article_id)
-    if current_user in article.likes:
-        article.likes.remove(current_user)
+    main_list, sub_list = ((article.likes, article.dislikes) if action == 'like'
+                           else (article.dislikes, article.likes))
+    if current_user in sub_list:
+        sub_list.remove(current_user)
+    if current_user in main_list:
+        main_list.remove(current_user)
     else:
-        article.likes.append(current_user)
+        main_list.append(current_user)
     db.session.commit()
     return redirect(url_for('main.article_view', id=article_id))
+
+
+@bp.route('/follow_country/<int:id>/')
+@login_required
+def follow_country(id):
+    country = Country.query.get(id)
+    if current_user in country.followers:
+        country.followers.remove(current_user)
+    else:
+        country.followers.append(current_user)
+    db.session.commit()
+    return redirect(url_for('main.country_view', id=id))

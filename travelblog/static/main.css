@@ -56,3 +56,11 @@ footer {
     flex-grow: unset;
     align-self: center;
 }
+
+.liked {
+    color: green;
+}
+
+.disliked {
+    color: red;
+}

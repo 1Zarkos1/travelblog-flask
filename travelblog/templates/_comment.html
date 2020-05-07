@@ -1,0 +1,11 @@
+<div class="comment">
+    <div>
+        <small>{{ comm_loop.index }}</small>
+    </div>
+    <div>
+        {{ comment.body }}
+    </div>
+    <div>
+        <small>by <a href="{{ url_for('main.user', username=article.article_author.username) }}">{{ article.article_author.username }}</a> on {{ article.date_posted }}</small>
+    </div>
+</div>

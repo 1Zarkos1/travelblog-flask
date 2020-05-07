@@ -25,12 +25,14 @@ class EditProfileForm(FlaskForm):
 class ArticleForm(FlaskForm):
     article_type = SelectField('Type', choices=[(
         'Guide', 'Guide'), ('Blogpost', 'Blogpost'), ('News', 'News')])
-    title = StringField('Title')
-    country_tag = SelectMultipleField('Country tags',
-                              choices=[(country.name, country.name)
-                                       for country in Country.get_country_list()])
-    body = TextAreaField('Post body')
-    submit = SubmitField('Post')
+    title = StringField(
+        'Title', validators=[DataRequired('Article must have a title!')])
+    country_tag = SelectMultipleField(
+        'Country tags', choices=[(country.name, country.name)
+                                 for country in Country.get_country_list()])
+    body = TextAreaField(
+        'Post body', validators=[DataRequired('Article must have some text!')])
+    submit = SubmitField()
 
 
 class CommentForm(FlaskForm):

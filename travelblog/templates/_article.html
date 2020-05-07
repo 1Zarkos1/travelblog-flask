@@ -9,4 +9,7 @@
             {{ country.name }}
         {% endfor %}
     </small>
+    <small>
+        <a href="{{ url_for('main.article_view', id=article.id) }}/#comments">Comments({{ article.comments.count() }})</a>
+    </small>
 </div>

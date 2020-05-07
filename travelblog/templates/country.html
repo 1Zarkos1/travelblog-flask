@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from 'macros.html' import pagination %}
 {% block content %}
     {% with messages = get_flashed_messages(with_categories=True) %}
     {% if messages %}
@@ -21,5 +22,19 @@
                     Population: {{ country.info.population }}
                 </div>
             </div>
+        </div>
+        {{ country.followers|length }}
+        <a href="{{ url_for('main.follow_country', id=country.id) }}">
+            {% if current_user in country.followers %}
+                Unfollow
+            {% else %}
+                Follow
+            {% endif %}
+        </a><hr/>
+        {% for article in articles.items %}
+        {% include '_article.html' %}
+        {% endfor %}<hr/ >
+        <div class="pagination">
+            {{ pagination(articles, 'main.country_view', country.id) }}
         </div>
 {% endblock content %}

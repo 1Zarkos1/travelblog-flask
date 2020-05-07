@@ -43,6 +43,14 @@ user_article_like_relation = db.Table(
               primary_key=True))
 
 
+user_article_dislike_relation = db.Table(
+    'article_dislikes',
+    db.Column('article_id', db.Integer, db.ForeignKey('article.id'),
+              primary_key=True),
+    db.Column('user_id', db.Integer, db.ForeignKey('user.id'),
+              primary_key=True))
+
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
@@ -50,21 +58,26 @@ class User(UserMixin, db.Model):
     password_hash = db.Column(db.String(128))
     confirmed = db.Column(db.Boolean(), default=False)
 
-    info = db.relationship('UserInfo', backref='user', uselist=False, cascade='all')
+    info = db.relationship('UserInfo', backref='user', uselist=False,
+                           cascade='all')
     comments = db.relationship('Comment', backref='comment_author')
     articles = db.relationship('Article', backref='article_author')
 
     followed_countries = db.relationship(
-        'Country', secondary=country_follower_relation, lazy='subquery',
-        backref=db.backref('followers', lazy=True))
+        'Country', secondary=country_follower_relation, lazy=True,
+        backref='followers')
 
     visited_countries = db.relationship(
-        'Country', secondary=country_visitor_relation, lazy='subquery',
-        backref=db.backref('visitors', lazy=True))
+        'Country', secondary=country_visitor_relation, lazy=True,
+        backref='visitors')
 
     liked_articles = db.relationship(
-        'Article', secondary=user_article_like_relation, lazy='subquery',
-        backref=db.backref('likes', lazy=True))
+        'Article', secondary=user_article_like_relation, lazy=True,
+        backref='likes')
+
+    disliked_articles = db.relationship(
+        'Article', secondary=user_article_dislike_relation, lazy=True,
+        backref='dislikes')
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -117,11 +130,12 @@ class Country(db.Model):
     name = db.Column(db.String(60), index=True, unique=True)
     code = db.Column(db.String(2), index=True, unique=True)
 
-    info = db.relationship('CountryInfo', backref='country', uselist=False)
+    info = db.relationship('CountryInfo', backref='country', uselist=False,
+                           cascade='all')
 
     articles = db.relationship(
-        'Article', secondary=country_articletags_relation, lazy='subquery',
-        backref=db.backref('country_tags', lazy=True), cascade='all')
+        'Article', secondary=country_articletags_relation, lazy='dynamic',
+        backref='country_tags', cascade='all')
 
     def __repr__(self):
         return f'<Country {self.name}>'
@@ -159,7 +173,8 @@ class Article(db.Model):
     date_posted = db.Column(db.DateTime(), default=dt.utcnow)
     last_updated = db.Column(db.DateTime())
 
-    comments = db.relationship('Comment', backref='article', cascade='all', lazy='subquery')
+    comments = db.relationship(
+        'Comment', backref='article', cascade='all', lazy='dynamic')
 
     def __repr__(self):
         return (f'<Article {self.id} title {self.title}'

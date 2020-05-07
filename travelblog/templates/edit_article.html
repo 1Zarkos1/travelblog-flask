@@ -1,6 +1,5 @@
 {% extends "base.html" %}
-{% from 'macros.html' import pagination %}
-
+{% from 'macros.html' import article_form %}
 {% block content %}
     {% with messages = get_flashed_messages(with_categories=True) %}
     {% if messages %}
@@ -11,11 +10,7 @@
         {% endfor %}
     {% endif %}
     {% endwith %}
-    {% for article in articles.items %}
-        {% include '_article.html' %}
-    {% endfor %}<hr/ >
-    <div class=pagination>
-        {{ pagination(articles, 'main.index') }}
+    <div class="content-section">
+        {{ article_form(form, 'Update', 'Update article', 'main.article_view', id) }}
     </div>
-{% endblock %}
-
+{% endblock content %}
