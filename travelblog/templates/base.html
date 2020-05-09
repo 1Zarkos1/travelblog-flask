@@ -12,6 +12,22 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
     {{ moment.include_jquery() }}
     {{ moment.include_moment() }}
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $( "#dislike, #like" ).click(function(e) {
+                e.preventDefault();
+                $.ajax({type: "GET",
+                    url: this,
+                    success:function(result) {
+                        $('span.likes-counter').text(result);
+                    },
+                    error:function(result) {
+                    alert('error');
+                    }
+                });
+            });
+        });
+    </script>
     <title>Southeast Asia Travel</title>
 </head>
 <body>
@@ -36,6 +52,18 @@
             {% endif %}
         </ul>
     </header>
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert"">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
     <main>
         {% block content %}{% endblock %}
     </main>

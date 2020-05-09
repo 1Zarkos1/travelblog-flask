@@ -2,7 +2,8 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed
 from wtforms.fields.html5 import DateField
 from wtforms.fields import (StringField, SubmitField, TextAreaField,
-                            SelectMultipleField, SelectField, FileField)
+                            SelectMultipleField, SelectField, FileField, 
+                            HiddenField)
 from wtforms.validators import DataRequired, ValidationError, Length
 
 from travelblog.models import User, Country
@@ -36,6 +37,7 @@ class ArticleForm(FlaskForm):
 
 
 class CommentForm(FlaskForm):
+    id = HiddenField()
     comment = TextAreaField('Your comment')
     submit = SubmitField('Leave comment')
 

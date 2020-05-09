@@ -1,7 +1,8 @@
 import os
 from datetime import datetime
 
-from flask import render_template, redirect, request, url_for, flash, abort
+from flask import (render_template, redirect, request, url_for, flash, abort,
+                   json)
 from flask_login import current_user, login_required
 
 from travelblog.main import bp
@@ -163,10 +164,10 @@ def edit_profile():
     return render_template('edit_profile.html', form=form)
 
 
-@bp.route('/likes_control/<int:article_id>/<action>/')
+@bp.route('/likes_control/<int:id>/<action>/')
 @login_required
-def likes_control(article_id, action):
-    article = Article.query.get(article_id)
+def likes_control(id, action):
+    article = Article.query.get(id)
     main_list, sub_list = ((article.likes, article.dislikes) if action == 'like'
                            else (article.dislikes, article.likes))
     if current_user in sub_list:
@@ -176,8 +177,7 @@ def likes_control(article_id, action):
     else:
         main_list.append(current_user)
     db.session.commit()
-    return redirect(url_for('main.article_view', id=article_id))
-
+    return json.dumps(len(article.likes)-len(article.dislikes)), 200
 
 @bp.route('/send_message/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -228,6 +228,17 @@ def delete_message(id):
     db.session.delete(message)
     db.session.commit()
     return redirect(url_for('main.messages'))
+
+
+@bp.route('/comment/delete/<int:id>/')
+@login_required
+def delete_comment(id):
+    comment = Comment.query.get_or_404(id)
+    if current_user != comment.comment_author:
+        abort(403)
+    db.session.delete(comment)
+    db.session.commit()
+    return redirect(url_for('main.article_view', id=comment.article_id))
 
 
 @bp.route('/follow_country/<int:id>/')

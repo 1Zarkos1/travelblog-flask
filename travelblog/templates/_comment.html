@@ -1,11 +1,65 @@
-<div class="comment">
-    <div>
-        <small>{{ comm_loop.index }}</small>
+<div id="body-{{ comment.id }}" class="comment">
+    <div class="comment-top">
+        <span class="comment-index">#{{ comm_loop.index }}</span>
+        <div class="comment-author" style="{{ 'font-weight: bold' if comment.comment_author == article.article_author }}">
+            <a href="{{ url_for('main.user', username=comment.comment_author.username) }}">
+                {{ comment.comment_author.username }}
+            </a>
+        </div>
+        <span class="comment-date">{{ moment(comment.date_posted).fromNow() }}</span>
+        {% if comment.last_updated != None %}
+        <span class="comment-edited">
+            {{ moment(comment.last_updated).fromNow() }}
+        </span>
+        {% endif %}
     </div>
-    <div>
+    <div id="body-{{ comment.id }}" class="comment-body">
         {{ comment.body }}
     </div>
-    <div>
-        <small>by <a href="{{ url_for('main.user', username=comment.comment_author.username) }}">{{ comment.comment_author.username }}</a> {{ moment(comment.date_posted).fromNow() }}</small>
+    <div class="comment-bottom">
+        <!-- <span class="comment-bottom-button">
+            Reply
+        </span> -->
+        <!-- <script type="text/javascript">
+            function insertComment(id) {
+                var id = id
+                alert({{ url_for('main.likes_control', id=comment.id, action='like')|tojson }})
+                event.preventDefault()
+                var comHTML = document.getElementById(`body-${id}`)
+                var comment = comHTML.textContent;
+                // document.getElementsByClassName('insert')[0].value = comment.trim()
+                var input = document.getElementsByClassName('comment-form')[0].cloneNode(true)
+                input.removeChild(input.querySelector('legend'))
+                input.querySelector('input[type=submit]').value = 'Edit'
+                input.getElementsByClassName('insert')[0].value = comment.trim()
+                input.getElementsByTagName('input').value = id
+
+                comHTML.parentNode.replaceChild(input, comHTML)
+                alert(comHTML)
+                function returnComment(e) {
+                    e.preventDefault();
+                    comHTML.textContent = input.getElementsByClassName('insert')[0].value;
+                    const form = e.target;
+
+                    // Post data using the Fetch API
+                    fetch(form.action, {
+                        method: form.method,
+                        body: new FormData(form)
+                    })
+                    input.parentNode.replaceChild(comHTML, input)
+                }
+                input.addEventListener('submit', returnComment, false)
+
+                function sendRequest() {}
+
+                // document.getElementById('hidden').value = id
+            }
+        </script> -->
+        <span class="comment-bottom-button">
+            {% if current_user == comment.comment_author %}
+                <a href="" id="{{ comment.id }}" class="edit-link" onclick="insertComment(this.id)">Edit</a>
+                <a href="{{ url_for('main.delete_comment', id=comment.id) }}" class="delete-link">Delete</a>
+            {% endif %}
+        </span>
     </div>
 </div>
