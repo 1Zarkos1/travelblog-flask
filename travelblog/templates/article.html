@@ -20,7 +20,7 @@
                 {% endfor %}
             </small>
             <div>
-                by <a href="{{ url_for('main.user', username=article.article_author.username) }}">{{ article.article_author.username }}</a> on {{ article.date_posted }}
+                by <a href="{{ url_for('main.user', username=article.article_author.username) }}">{{ article.article_author.username }}</a> {{ moment(article.date_posted).fromNow() }}
             </div>
         </article>
         {% if current_user.is_anonymous %}

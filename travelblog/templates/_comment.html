@@ -6,6 +6,6 @@
         {{ comment.body }}
     </div>
     <div>
-        <small>by <a href="{{ url_for('main.user', username=article.article_author.username) }}">{{ article.article_author.username }}</a> on {{ article.date_posted }}</small>
+        <small>by <a href="{{ url_for('main.user', username=comment.comment_author.username) }}">{{ comment.comment_author.username }}</a> {{ moment(comment.date_posted).fromNow() }}</small>
     </div>
 </div>

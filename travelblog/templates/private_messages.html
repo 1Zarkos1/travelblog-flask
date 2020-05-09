@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block content %}
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+    <h3>Sent messages</h3>
+    {% for message in sent %}
+        <div class="message">
+            <div class="message_title">
+                <a href="{{ url_for('main.message', id=message.id) }}">{{ message.title }}</a>
+            </div>
+            <div class="message_body">
+                {{ message.body }}
+            </div>
+            <small>by {{ message.sender.username }} on {{ message.date_send }}</small>
+        </div>
+    {% endfor %}<hr/ >
+    <h3>Received messages</h3>
+    {% for message in received %}
+        <div class="{{ 'read_message' if message.seen == True else 'unread_message' }}">
+            <div class="message_title">
+                <a href="{{ url_for('main.message', id=message.id) }}">{{ message.title }}</a>
+            </div>
+            <div class="message_body">
+                {{ message.body }}
+            </div>
+            <small>by {{ message.sender.username }} on {{ message.date_send }}</small>
+        </div>
+    {% endfor %}
+{% endblock %}

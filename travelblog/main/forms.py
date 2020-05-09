@@ -38,3 +38,11 @@ class ArticleForm(FlaskForm):
 class CommentForm(FlaskForm):
     comment = TextAreaField('Your comment')
     submit = SubmitField('Leave comment')
+
+
+class MessageForm(FlaskForm):
+    title = StringField(
+        'Title', validators=[DataRequired('Message must have a title')])
+    body = TextAreaField(
+        'Message', validators=[DataRequired('Write something to message')])
+    submit = SubmitField('Send')

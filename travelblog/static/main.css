@@ -64,3 +64,11 @@ footer {
 .disliked {
     color: red;
 }
+
+.unread_message {
+    font-weight: bold;
+}
+
+.unread_message small{
+    font-weight: normal;
+}

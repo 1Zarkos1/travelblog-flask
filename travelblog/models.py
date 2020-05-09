@@ -63,6 +63,12 @@ class User(UserMixin, db.Model):
     comments = db.relationship('Comment', backref='comment_author')
     articles = db.relationship('Article', backref='article_author')
 
+    sent_messages = db.relationship(
+        'Message', foreign_keys='Message.sender_id', backref='sender')
+
+    received_messages = db.relationship(
+        'Message', foreign_keys='Message.recipient_id', backref='recipient')
+
     followed_countries = db.relationship(
         'Country', secondary=country_follower_relation, lazy=True,
         backref='followers')
@@ -192,3 +198,17 @@ class Comment(db.Model):
 
     def __repr__(self):
         return f'<Comment №{self.id} on post {self.article.title}>'
+
+
+class Message(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    recipient_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    title = db.Column(db.String(200), nullable=False)
+    body = db.Column(db.Text(2000), nullable=False)
+
+    date_send = db.Column(db.DateTime(), default=dt.utcnow)
+    seen = db.Column(db.Boolean(), default=False)
+
+    def __repr__(self):
+        return f'<Message №{self.id} from {self.sender} to {self.receiver}>'

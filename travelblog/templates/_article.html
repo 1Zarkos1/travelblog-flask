@@ -9,7 +9,9 @@
             {{ country.name }}
         {% endfor %}
     </small>
+    <br>
     <small>
+        by {{ article.article_author.username }} {{ moment(article.date_posted).fromNow() }}
         <a href="{{ url_for('main.article_view', id=article.id) }}/#comments">Comments({{ article.comments.count() }})</a>
     </small>
 </div>

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+        <article>
+            <h2>{{ message.title }}</h2>
+            <div>
+                {{ message.body }}
+            </div>
+            <div>
+                by <a href="{{ url_for('main.user', username=message.sender.username) }}">{{ message.sender.username }}</a> {{ moment(message.date_send).fromNow() }}
+            </div>
+            <div class="func_buttons">
+                <a href="{{ url_for('main.send_message', id=message.sender_id) }}" class="btn btn-primary">Reply</a>
+                <a href="{{ url_for('main.delete_message', id=message.id) }}" class="btn btn-danger">Delete</a>
+            </div>
+        </article>
+{% endblock content %}

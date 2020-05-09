@@ -6,8 +6,9 @@ from flask_login import current_user, login_required
 
 from travelblog.main import bp
 from travelblog import db
-from travelblog.models import User, Country, Article, Comment
-from travelblog.main.forms import EditProfileForm, ArticleForm, CommentForm
+from travelblog.models import User, Country, Article, Comment, Message
+from travelblog.main.forms import (EditProfileForm, ArticleForm, CommentForm,
+                                   MessageForm)
 
 
 @bp.before_request
@@ -176,6 +177,57 @@ def likes_control(article_id, action):
         main_list.append(current_user)
     db.session.commit()
     return redirect(url_for('main.article_view', id=article_id))
+
+
+@bp.route('/send_message/<int:id>', methods=['GET', 'POST'])
+@login_required
+def send_message(id):
+    user = User.query.get(id)
+    if (not current_user.is_authenticated or current_user.id == id
+            or user == None):
+        flash("You can't send message to this user!")
+        return redirect(url_for('main.user', username=user.username))
+    form = MessageForm()
+    if form.validate_on_submit():
+        message = Message(title=form.title.data, body=form.body.data,
+                          sender=current_user, recipient=user)
+        db.session.add(message)
+        db.session.commit()
+        flash('Your message was sent')
+        return redirect(url_for('main.user', username=user.username))
+    return render_template('send_message.html', form=form, user=user)
+
+
+@bp.route('/private_messages/')
+@login_required
+def messages():
+    received = current_user.received_messages
+    sent = current_user.sent_messages
+    return render_template('private_messages.html', sent=sent,
+                           received=received, now=datetime.utcnow())
+
+
+@bp.route('/private_messages/<int:id>/')
+@login_required
+def message(id):
+    message = Message.query.get_or_404(id)
+    if current_user != message.recipient:
+        abort(403)
+    if message.seen == False:
+        message.seen = True
+        db.session.commit()
+    return render_template('message.html', message=message)
+
+
+@bp.route('/private_messages/delete/<int:id>/')
+@login_required
+def delete_message(id):
+    message = Message.query.get_or_404(id)
+    if current_user not in (message.recipient, message.sender):
+        abort(403)
+    db.session.delete(message)
+    db.session.commit()
+    return redirect(url_for('main.messages'))
 
 
 @bp.route('/follow_country/<int:id>/')

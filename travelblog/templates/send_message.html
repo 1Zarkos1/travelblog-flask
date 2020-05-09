@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+    {% with messages = get_flashed_messages(with_categories=True) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
+    <div class="content-section">
+        <form action="" method="post" enctype="multipart/form-data" novalidate>
+            {{ form.hidden_tag() }}
+            <fieldset class="form-group">
+                <legend class="border-bottom mb-4">
+                    Send message to {{ user.username }}
+                </legend>
+                <div class="form-group">
+                    {{ form.title.label }}
+                    {{ form.title(class_='form-control') }}
+                    {% for error in form.title.errors %}
+                    <div class="text-danger">
+                        <small>[{{ error }}]</small>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    {{ form.body.label }}
+                    {{ form.body(class_='form-control') }}
+                    {% for error in form.body.errors %}
+                    <div class="text-danger">
+                        <small>[{{ error }}]</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </fieldset>
+            <div class="form-group">
+                {{ form.submit(class_='btn btn-primary') }}
+                <a href="{{ url_for('main.user', username=user.username) }}" class="btn btn-secondary">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+{% endblock content %}
