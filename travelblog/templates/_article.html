@@ -1,17 +1,31 @@
 <a href="{{ url_for('main.user', username=article.article_author.username) }}"></a>
-<div>
-    <h2><a href="{{ url_for('main.article_view', id=article.id) }}">{{ article.title }}</a></h2>
-    <div>
+<div class="small-article-container">
+    <div class="article-title">
+        <a href="{{ url_for('main.article_view', id=article.id) }}">
+            {{ article.title }}
+        </a>
+    </div>
+    <div class="article-body">
         {{ article.body }}
     </div>
-    <small>
-        {% for country in article.country_tags %}
-            {{ country.name }}
-        {% endfor %}
-    </small>
-    <br>
-    <small>
-        by {{ article.article_author.username }} {{ moment(article.date_posted).fromNow() }}
-        <a href="{{ url_for('main.article_view', id=article.id) }}/#comments">Comments({{ article.comments.count() }})</a>
-    </small>
+    {% if article.country_tags != None %}
+        <div class="country-tags comment-bottom">
+            {% for country in article.country_tags %}
+                <a href="{{ url_for('main.country_view', id=country.id) }}">
+                    {{ country.name }}
+                </a>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <div class="comment-top">
+        <span class="comment-author">
+            {{ article.article_author.username }}
+        </span>
+        <span class="comment-date">
+            {{ moment(article.date_posted).fromNow() }}
+        </span>
+        <a href="{{ url_for('main.article_view', id=article.id) }}/#comments">
+            Comments({{ article.comments.count() }})
+        </a>
+    </div class="comment-top">
 </div>

@@ -1,60 +1,133 @@
 {% extends "base.html" %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $( "#dislike, #like" ).click(function(e) {
+                e.preventDefault();
+                $.ajax({type: "GET",
+                    url: this,
+                    success:function(result) {
+                        $('span.likes-counter').text(result);
+                    },
+                    error:function(result) {
+                    alert('error');
+                    }
+                });
+            });
+        });
+        $(document).ready(function(){
+            $( ".delete-comment-link" ).click(function(e) {
+                e.preventDefault();
+                var id = $(this).attr('id').split('-')[1]
+                $.ajax({type: "GET",
+                    url: this,
+                    success:function(result) {
+                        var comment = $(`#body-${id}`);
+                        comment.next().remove()
+                        comment.text('This comment was deleted!');
+                        comment.addClass('deleted-comment')
+                        
+                    },
+                    error:function(result) {
+                        alert('error');
+                    }
+                });
+            });
+        });
+    </script>
+    <script type="text/javascript">
+        function insertComment(id) {
+            var id = id
+            event.preventDefault()
+            var comHTML = document.getElementById(`body-${id}`)
+            var comment = comHTML.textContent;
+            var input = document.getElementsByClassName('comment-form')[0].cloneNode(true)
+            input.removeChild(input.querySelector('legend'))
+            input.querySelector('input[type=submit]').value = 'Edit'
+            input.getElementsByClassName('insert')[0].value = comment.trim()
+            input.getElementsByClassName('hidden')[0].value = id
+
+            comHTML.parentNode.replaceChild(input, comHTML)
+            
+            function returnComment(e) {
+                e.preventDefault();
+                comHTML.textContent = input.getElementsByClassName('insert')[0].value;
+                var form = e.target;
+                var xhr = new XMLHttpRequest();
+                var fd = new FormData(form);
+                xhr.addEventListener( "error", function( event ) {
+                    alert( 'Oops! Something went wrong.' );
+                } );
+                xhr.open( "POST", {{ url_for('main.article_view', id=article.id)|tojson }}, true );
+                xhr.send(fd);
+                input.parentNode.replaceChild(comHTML, input);
+            }
+            input.addEventListener('submit', returnComment, false)
+        }
+    </script>
+{%endblock scripts %}
+
 {% block content %}
-        <article>
-            <h2>{{ article.title }}</h2>
-            <div>
-                {{ article.body }}
-            </div>
-            <small>
-                {% for country in article.country_tags %}
-                    {{ country.name }}
-                {% endfor %}
-            </small>
-            <div>
-                by <a href="{{ url_for('main.user', username=article.article_author.username) }}">{{ article.article_author.username }}</a> {{ moment(article.date_posted).fromNow() }}
-            </div>
-        </article>
-        {% if current_user.is_anonymous %}
-            {{ article.likes|length - article.dislikes|length }} 
-        {% else %}
-            <a id="dislike" href="{{ url_for('main.likes_control', id=article.id, action='dislike') }}" class="{{ 'disliked' if article in current_user.disliked_articles else '' }}">-</a> 
-            <span class="likes-counter">{{ article.likes|length - article.dislikes|length }}</span>
-            <a id="like" href="{{ url_for('main.likes_control', id=article.id, action='like') }}" class="{{ 'liked' if article in current_user.liked_articles else '' }}">+</a>
-        {% endif %}
-        {% if current_user == article.article_author %}
-            <a href="{{ url_for('main.edit_article', id=article.id) }}">
-                Edit article
-            </a>
-        {% endif %}
-        <hr/ >
-        <div id='comments' class="comments-title">Comments:</div>
-        <section class="comments">
-            {% for comment in article.comments.all() %}
-                {% set comm_loop = loop %}
-                {% include '_comment.html' %}
+    <article class="article-container">
+        <div class="article-title">{{ article.title }}</div>
+        <div class="article-body">
+            {{ article.body }}
+        </div>
+        <small>
+            {% for country in article.country_tags %}
+                {{ country.name }}
             {% endfor %}
-        </section>
-        {% if current_user.is_authenticated %}
-            <div>
-                <form action="" method="POST" class="comment-form">
-                    {{ form.hidden_tag() }}
-                    <legend>
-                        Leave your comment
-                    </legend>
-                    <div class="form-group">
-                        {{ form.id(id='hidden') }}
-                        {{ form.comment.label }}
-                        {{ form.comment(class_='form-control insert') }}
-                        {% for error in form.comment.errors %}
-                        <div class="text-danger">
-                            <small>[{{ error }}]</small>
-                        </div>
-                        {% endfor %}
+        </small>
+        <div class="comment-top">
+            <span class="comment-author article-author"><a href="{{ url_for('main.user', username=article.article_author.username) }}">{{ article.article_author.username }}</a></span>
+            <span class="comment-date">{{ moment(article.date_posted).fromNow() }}</span>
+            {% if article.last_updated != None %}
+            <span class="comment-edited">edited {{ moment(article.last_updated).fromNow() }}</span>
+            {% endif %}
+        </div>
+    </article>
+    {% if current_user.is_anonymous %}
+        {{ article.likes|length - article.dislikes|length }} 
+    {% else %}
+        <a id="dislike" href="{{ url_for('main.likes_control', id=article.id, action='dislike') }}" class="{{ 'disliked' if article in current_user.disliked_articles else '' }}">-</a> 
+        <span class="likes-counter">{{ article.likes|length - article.dislikes|length }}</span>
+        <a id="like" href="{{ url_for('main.likes_control', id=article.id, action='like') }}" class="{{ 'liked' if article in current_user.liked_articles else '' }}">+</a>
+    {% endif %}
+    {% if current_user == article.article_author %}
+        <a href="{{ url_for('main.edit_article', id=article.id) }}" class="comment-bottom">
+            Edit article
+        </a>
+    {% endif %}
+    <hr/ >
+    <div id='comments' class="comments-title">Comments:</div>
+    <section class="comments">
+        {% for comment in article.comments.all() %}
+            {% set comm_loop = loop %}
+            {% include '_comment.html' %}
+        {% endfor %}
+    </section>
+    {% if current_user.is_authenticated %}
+        <div>
+            <form action="" method="POST" class="comment-form">
+                {{ form.hidden_tag() }}
+                <legend>
+                    Leave your comment
+                </legend>
+                <div class="form-group">
+                    {{ form.id(id='hidden', class_='hidden') }}
+                    <!-- {{ form.comment.label }} -->
+                    {{ form.comment(class_='form-control insert') }}
+                    {% for error in form.comment.errors %}
+                    <div class="text-danger">
+                        <small>[{{ error }}]</small>
                     </div>
-                    <div class="form-group">
-                        {{ form.submit(class_='btn btn-primary') }}
-                    </div>
-                </form>
-            </div>
-        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="form-group">
+                    {{ form.submit(class_='btn btn-primary') }}
+                </div>
+            </form>
+        </div>
+    {% endif %}
 {% endblock content %}

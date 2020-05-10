@@ -73,9 +73,15 @@ def article_view(id):
     article = Article.query.filter_by(id=id).first_or_404()
     form = CommentForm()
     if form.validate_on_submit():
-        comment = Comment(article=article, comment_author=current_user,
-                          body=form.comment.data)
-        db.session.add(comment)
+        comment_id = form.id.raw_data[1]
+        if comment_id:
+            comment = Comment.query.get_or_404(int(comment_id))
+            comment.body = form.comment.data
+            comment.last_updated = datetime.utcnow()
+        else:
+            comment = Comment(article=article, comment_author=current_user,
+                            body=form.comment.data)
+            db.session.add(comment)
         db.session.commit()
         return redirect(url_for('main.article_view', id=id))
     return render_template('article.html', form=form, article=article)
@@ -134,8 +140,9 @@ def about_me():
 
 @bp.route('/user/<username>/')
 def user(username):
+    page = request.args.get('page', 1, type=int)
     user = User.query.filter_by(username=username).first_or_404()
-    articles = Article.query.filter_by(article_author=user).paginate()
+    articles = Article.query.filter_by(article_author=user).paginate(page=page, per_page=2)
     return render_template('profile.html', user=user, articles=articles)
 
 

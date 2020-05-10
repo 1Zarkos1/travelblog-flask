@@ -1,14 +1,6 @@
 {% extends "base.html" %}
+{% from 'macros.html' import pagination %}
 {% block content %}
-    {% with messages = get_flashed_messages(with_categories=True) %}
-    {% if messages %}
-        {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
-    {% endwith %}
         <h1>User: {{ user.username }}</h1>
         <div class="user-profile">
             <img class="user-profile-img" src="{{ url_for('static', filename='img/avatars/{}'.format(user.info.avatar)) }}">
@@ -52,23 +44,7 @@
             {% include '_article.html' %}
         {% endfor %}<hr/ >
         <div class=pagination>
-            {% if articles.has_prev %}
-                <a href="{{ url_for('main.index', page=articles.prev_num) }}">Back</a>
-            {% endif %}
-            {% for page in articles.iter_pages() %}
-                {% if page %}
-                    {% if page != articles.page %}
-                        <a href="{{ url_for('main.index', page=page) }}">{{ page }}</a>
-                    {% else %}
-                        <strong>{{ page }}</strong>
-                    {% endif %}
-                {% else %}
-                    <span class=ellipsis>…</span>
-                {% endif %}
-            {% endfor %}
-            {% if articles.has_next %}
-                <a href="{{ url_for('main.index', page=articles.next_num) }}">Forward</a>
-            {% endif %}
+            {{ pagination(articles, 'main.user', username=user.username) }}
         </div>
 
 {% endblock content %}

@@ -39,7 +39,7 @@ class ArticleForm(FlaskForm):
 class CommentForm(FlaskForm):
     id = HiddenField()
     comment = TextAreaField('Your comment')
-    submit = SubmitField('Leave comment')
+    submit = SubmitField('Comment')
 
 
 class MessageForm(FlaskForm):

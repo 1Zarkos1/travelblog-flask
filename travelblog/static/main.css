@@ -120,3 +120,29 @@ footer {
 .comment-bottom {
     font-size: 0.9rem;
 }
+
+.article-author {
+    font-weight: 600;
+}
+
+.article-title {
+    font-weight: 400;
+    font-size: 1.5rem;
+}
+
+.articles-list {
+    display: flex;
+    flex-direction: column;
+}
+
+.small-article-container {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.8rem;
+}
+
+.deleted-comment {
+    color: gray;
+    font-style: italic;
+    font-size: 0.9rem;
+}

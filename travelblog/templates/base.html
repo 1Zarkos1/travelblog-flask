@@ -12,22 +12,7 @@
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
     {{ moment.include_jquery() }}
     {{ moment.include_moment() }}
-    <script type="text/javascript">
-        $(document).ready(function(){
-            $( "#dislike, #like" ).click(function(e) {
-                e.preventDefault();
-                $.ajax({type: "GET",
-                    url: this,
-                    success:function(result) {
-                        $('span.likes-counter').text(result);
-                    },
-                    error:function(result) {
-                    alert('error');
-                    }
-                });
-            });
-        });
-    </script>
+    {% block scripts %}{% endblock %}
     <title>Southeast Asia Travel</title>
 </head>
 <body>
