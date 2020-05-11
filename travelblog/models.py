@@ -43,6 +43,14 @@ user_article_like_relation = db.Table(
               primary_key=True))
 
 
+user_follower_followed_relation = db.Table(
+    'user_followers',
+    db.Column('followed_id', db.Integer, db.ForeignKey('user.id'),
+              primary_key=True),
+    db.Column('follower_id', db.Integer, db.ForeignKey('user.id'),
+              primary_key=True))
+
+
 user_article_dislike_relation = db.Table(
     'article_dislikes',
     db.Column('article_id', db.Integer, db.ForeignKey('article.id'),
@@ -63,11 +71,19 @@ class User(UserMixin, db.Model):
     comments = db.relationship('Comment', backref='comment_author')
     articles = db.relationship('Article', backref='article_author')
 
+    followers = db.relationship(
+        'User', secondary=user_follower_followed_relation,
+        primaryjoin=id==user_follower_followed_relation.c.followed_id,
+        secondaryjoin=id==user_follower_followed_relation.c.follower_id,
+        backref='follows')
+
     sent_messages = db.relationship(
-        'Message', foreign_keys='Message.sender_id', backref='sender')
+        'Message', foreign_keys='Message.sender_id', lazy='dynamic', 
+        backref=db.backref('sender', lazy=True))
 
     received_messages = db.relationship(
-        'Message', foreign_keys='Message.recipient_id', backref='recipient')
+        'Message', foreign_keys='Message.recipient_id', lazy='dynamic', 
+        backref=db.backref('recipient', lazy=True))
 
     followed_countries = db.relationship(
         'Country', secondary=country_follower_relation, lazy=True,
@@ -209,6 +225,7 @@ class Message(db.Model):
 
     date_send = db.Column(db.DateTime(), default=dt.utcnow)
     seen = db.Column(db.Boolean(), default=False)
+    deleted = db.Column(db.Boolean())
 
     def __repr__(self):
-        return f'<Message №{self.id} from {self.sender} to {self.receiver}>'
+        return f'<Message №{self.id} from {self.sender} to {self.recipient}>'

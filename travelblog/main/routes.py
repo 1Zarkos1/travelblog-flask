@@ -80,7 +80,7 @@ def article_view(id):
             comment.last_updated = datetime.utcnow()
         else:
             comment = Comment(article=article, comment_author=current_user,
-                            body=form.comment.data)
+                              body=form.comment.data)
             db.session.add(comment)
         db.session.commit()
         return redirect(url_for('main.article_view', id=id))
@@ -142,7 +142,8 @@ def about_me():
 def user(username):
     page = request.args.get('page', 1, type=int)
     user = User.query.filter_by(username=username).first_or_404()
-    articles = Article.query.filter_by(article_author=user).paginate(page=page, per_page=2)
+    articles = Article.query.filter_by(
+        article_author=user).paginate(page=page, per_page=2)
     return render_template('profile.html', user=user, articles=articles)
 
 
@@ -185,6 +186,7 @@ def likes_control(id, action):
         main_list.append(current_user)
     db.session.commit()
     return json.dumps(len(article.likes)-len(article.dislikes)), 200
+
 
 @bp.route('/send_message/<int:id>', methods=['GET', 'POST'])
 @login_required
@@ -258,3 +260,22 @@ def follow_country(id):
         country.followers.append(current_user)
     db.session.commit()
     return redirect(url_for('main.country_view', id=id))
+
+
+@bp.route('/user/<username>/follow/')
+@login_required
+def follow_user(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    if current_user in user.followers:
+        user.followers.remove(current_user)
+    else:
+        user.followers.append(current_user)
+    db.session.commit()
+    return redirect(url_for('main.user', username=username))
+
+
+@bp.route('/check_new_messages/')
+@login_required
+def check_new_messages():
+    new_messages = user.received_messages.filter_by(seen=False).count()
+    return json.dumps(new_messages)

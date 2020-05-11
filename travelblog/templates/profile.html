@@ -1,50 +1,60 @@
 {% extends "base.html" %}
 {% from 'macros.html' import pagination %}
+
 {% block content %}
-        <h1>User: {{ user.username }}</h1>
-        <div class="user-profile">
-            <img class="user-profile-img" src="{{ url_for('static', filename='img/avatars/{}'.format(user.info.avatar)) }}">
-            <div class="user-profile-info">
-                <div class="user-profile-field">
-                    Birthdate: {{ user.info.birthdate }}
-                </div>
-                <div class="user-profile-field">
-                    Gender: {{ user.info.gender }}
-                </div>
-                <div class="user-profile-field">
-                    Job: {{ user.info.job }}
-                </div>
-                <div class="user-profile-field">
-                    Origin Coutnry: {{ user.info.origin_country }}
-                </div>
-                <div class="user-profile-field">
-                    Last seen: {{ user.info.last_seen }}
-                </div>
-                <div class="user-profile-field">
-                    Registration date: {{ user.info.registration_date }}
-                </div>
-                <div class="user-profile-field">
-                    About: {{ user.info.about }}
-                </div>
+    <h1>User: {{ user.username }}</h1>
+    {% if current_user.is_authenticated %}
+        <a href="{{ url_for('main.follow_user', username=user.username) }}">
+            {{ 'Unfollow' if current_user in user.followers else 'Follow' }}
+        </a>
+    {% endif %}
+    <div class="user-profile">
+        <img class="user-profile-img" src="{{ url_for('static', filename='img/avatars/{}'.format(user.info.avatar)) }}">
+        <div class="user-profile-info">
+            <div class="user-profile-field">
+                Birthdate: {{ user.info.birthdate }}
+            </div>
+            <div class="user-profile-field">
+                Gender: {{ user.info.gender }}
+            </div>
+            <div class="user-profile-field">
+                Job: {{ user.info.job }}
+            </div>
+            <div class="user-profile-field">
+                Origin Coutnry: {{ user.info.origin_country }}
+            </div>
+            <div class="user-profile-field">
+                Last seen: {{ moment(user.info.last_seen).fromNow() }}
+            </div>
+            <div class="user-profile-field">
+                Registration date: {{ moment(user.info.registration_date).format('ll') }}
+            </div>
+            <div class="user-profile-field">
+                About: {{ user.info.about }}
             </div>
         </div>
-        <div class="user-info">
-            {% if user == current_user %}
-                <a href="{{ url_for('main.edit_profile') }}">Edit your profile</a>
-            {% endif %}
-        </div>
-        <div class="user-info">
-            {% if current_user.is_authenticated and user != current_user %}
-                <a href="{{ url_for('main.send_message', id=user.id) }}">Send private message</a>
-            {% else %}
-                <a href="{{ url_for('main.messages') }}">Messages</a>
-            {% endif %}
-        </div><hr />
-        {% for article in articles.items %}
-            {% include '_article.html' %}
-        {% endfor %}<hr/ >
-        <div class=pagination>
-            {{ pagination(articles, 'main.user', username=user.username) }}
-        </div>
-
+    </div>
+    <div class="user-info">
+        {% if user == current_user %}
+            <a href="{{ url_for('main.edit_profile') }}">Edit your profile</a>
+        {% endif %}
+    </div>
+    <div class="user-info">
+        {% if current_user.is_authenticated and user != current_user %}
+            <a href="{{ url_for('main.send_message', id=user.id) }}">Send private message</a>
+        {% else %}
+            <a href="{{ url_for('main.messages') }}">
+                Messages
+                {%- with count = current_user.received_messages.filter_by(seen=False).count() %}
+                    {{- "({})".format(count) if count else "" }}
+                {% endwith %}
+            </a>
+        {% endif %}
+    </div><hr />
+    {% for article in articles.items %}
+        {% include '_article.html' %}
+    {% endfor %}<hr/ >
+    <div class=pagination>
+        {{ pagination(articles, 'main.user', username=user.username) }}
+    </div>
 {% endblock content %}

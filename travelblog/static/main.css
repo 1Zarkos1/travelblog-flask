@@ -146,3 +146,9 @@ footer {
     font-style: italic;
     font-size: 0.9rem;
 }
+
+.new-messages-nav {
+    color: gray;
+    font-size: 0.9rem;
+    font-weight: 400;
+}
