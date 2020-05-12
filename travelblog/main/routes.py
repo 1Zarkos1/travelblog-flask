@@ -210,8 +210,10 @@ def send_message(id):
 @bp.route('/private_messages/')
 @login_required
 def messages():
-    received = current_user.received_messages
-    sent = current_user.sent_messages
+    received = current_user.received_messages.filter(
+        (Message.deleted==None) | (Message.deleted==False)).all()
+    sent = current_user.sent_messages.filter(
+        (Message.deleted==None) | (Message.deleted==True)).all()
     return render_template('private_messages.html', sent=sent,
                            received=received, now=datetime.utcnow())
 
@@ -220,9 +222,9 @@ def messages():
 @login_required
 def message(id):
     message = Message.query.get_or_404(id)
-    if current_user != message.recipient:
+    if current_user not in (message.recipient, message.sender):
         abort(403)
-    if message.seen == False:
+    if current_user == message.recipient and message.seen == False:
         message.seen = True
         db.session.commit()
     return render_template('message.html', message=message)
@@ -234,7 +236,16 @@ def delete_message(id):
     message = Message.query.get_or_404(id)
     if current_user not in (message.recipient, message.sender):
         abort(403)
-    db.session.delete(message)
+    if current_user == message.sender:
+        if message.deleted == None:
+            message.deleted = False
+        elif message.deleted == True:
+            db.session.delete(message)
+    else:
+        if message.deleted == None:
+            message.deleted = True
+        elif message.deleted == False:
+            db.session.delete(message)
     db.session.commit()
     return redirect(url_for('main.messages'))
 
@@ -277,5 +288,7 @@ def follow_user(username):
 @bp.route('/check_new_messages/')
 @login_required
 def check_new_messages():
-    new_messages = user.received_messages.filter_by(seen=False).count()
+    new_messages = current_user.received_messages.filter(
+        (Message.deleted==None) | (Message.deleted==False), 
+        Message.seen==False).count()
     return json.dumps(new_messages)
