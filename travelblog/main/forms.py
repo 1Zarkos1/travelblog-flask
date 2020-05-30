@@ -4,6 +4,7 @@ from wtforms.fields.html5 import DateField
 from wtforms.fields import (StringField, SubmitField, TextAreaField,
                             SelectMultipleField, SelectField, FileField, 
                             HiddenField)
+from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField
 from wtforms.validators import DataRequired, ValidationError, Length
 
 from travelblog.models import User, Country
@@ -25,20 +26,24 @@ class EditProfileForm(FlaskForm):
 
 class ArticleForm(FlaskForm):
     article_type = SelectField('Type', choices=[(
-        'Guide', 'Guide'), ('Blogpost', 'Blogpost'), ('News', 'News')])
+        'Guide', 'Guide'), ('Blog', 'Blog'), ('News', 'News')])
     title = StringField(
         'Title', validators=[DataRequired('Article must have a title!')])
     country_tag = SelectMultipleField(
         'Country tags', choices=[(country.name, country.name)
                                  for country in Country.get_country_list()])
-    body = TextAreaField(
-        'Post body', validators=[DataRequired('Article must have some text!')])
+    # country_tag = QuerySelectMultipleField(
+    #     label='Country tags', get_label='name', query_factory=lambda: Country.query)
+    # body = TextAreaField(
+    #     'Post body', validators=[DataRequired('Article must have some text!')])
+    hidden_body = HiddenField()
     submit = SubmitField()
 
 
 class CommentForm(FlaskForm):
     id = HiddenField()
-    comment = TextAreaField('Your comment')
+    # comment = TextAreaField('Your comment')
+    hidden_body = HiddenField()
     submit = SubmitField('Comment')
 
 

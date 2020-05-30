@@ -1,23 +1,31 @@
 {% macro pagination(pag_obj, path, left_edge=1, left_current=1, 
     right_current=1, right_edge=2) -%}
-    {% if pag_obj.has_prev %}
-        <a href="{{ url_for(path, page=pag_obj.prev_num, **kwargs) }}">Back</a>
-    {% endif %}
+    <li class="page-item{{ '' if pag_obj.has_prev else ' disabled' }}">
+        <a href="{{ url_for(path, page=pag_obj.prev_num, **kwargs) }}" class="page-link">
+            <span aria-hidden="true">&laquo;</span>
+        </a>
+    </li>
     {% for page in pag_obj.iter_pages(left_edge, left_current, right_current, 
                                       right_edge) %}
         {% if page %}
-            {% if page != pag_obj.page %}
-                <a href="{{ url_for(path, page=page, **kwargs) }}">{{ page }}</a>
-            {% else %}
-                <strong>{{ page }}</strong>
-            {% endif %}
+            <li class="page-item{{ ' disabled' if page == pag_obj.page else ''}}">
+                <a href="{{ url_for(path, page=page, **kwargs) }}" class="page-link">
+                    {{ page }}
+                </a>
+            </li>
         {% else %}
-            <span class=ellipsis>…</span>
+            <li class="page-item disabled">
+                <a href="#" class="page-link">
+                    &hellip;
+                </a>
+            </li>
         {% endif %}
     {% endfor %}
-    {% if pag_obj.has_next %}
-        <a href="{{ url_for(path, page=pag_obj.next_num, **kwargs) }}">Forward</a>
-    {% endif %}
+    <li class="page-item{{ '' if pag_obj.has_next else ' disabled' }}">
+        <a href="{{ url_for(path, page=pag_obj.next_num, **kwargs) }}" class="page-link">
+            <span aria-hidden="true">&raquo;</span>
+        </a>
+    </li>
 {%- endmacro %}
 
 {% macro article_form(form, legend, submit, article=None, id=None) -%}
@@ -47,7 +55,9 @@
             </div>
             <div class="form-group">
                 {{ form.country_tag.label }}
-                {{ form.country_tag(class_='form-control') }}
+                {{ form.country_tag(class_='my-select selectpicker form-control', 
+                                    data_live_search="true", 
+                                    title="Select realted countries") }}
                 {% for error in form.country_tag.errors %}
                 <div class="text-danger">
                     <small>[{{ error }}]</small>
@@ -55,20 +65,69 @@
                 {% endfor %}
             </div>
             <div class="form-group">
-                {{ form.body.label }}
-                {{ form.body(class_='form-control') }}
-                {% for error in form.body.errors %}
-                <div class="text-danger">
-                    <small>[{{ error }}]</small>
-                </div>
-                {% endfor %}
+                {{ form.hidden_body(id='hidden-body') }}
+                {{ quill_editor() }}
             </div>
         </fieldset>
         <div class="form-group">
-            {{ form.submit(class_='btn btn-primary', value=submit) }}
+            {{ form.submit(class_='btn btn-primary', value=submit, title='Show me somethign') }}
             <a href="{{ url_for(article or 'main.index', id=id) }}" class="btn btn-secondary">
                 Cancel
             </a>
         </div>
     </form>
+{%- endmacro %}
+
+
+{% macro quill_editor(type='article', class='') -%}
+        <div class="editor-container">
+            <div id="editor" class='{{ class }}'></div>
+        </div>
+        <script>
+            var toolbarOptions = [
+                ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+                ['blockquote', 'code-block'],
+                
+                [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript
+                [{ 'indent': '-1'}, { 'indent': '+1' }],          // outdent/indent
+                [{ 'direction': 'rtl' }],                         // text direction
+                
+                [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                
+                [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+                [{ 'font': [] }],
+                [{ 'align': [] }],
+                [ 'link', 'image', 'video', 'formula' ],
+                
+                ['clean']                                         // remove formatting button
+            ];
+            var quill = new Quill('#editor', {
+                theme: 'snow',
+                placeholder: 'Type here...',
+                modules: {
+                    toolbar: toolbarOptions,
+                }
+            });
+            {% if type=='article' %}
+                quill.on('text-change', function(delta, oldDelta, source) {
+                    $('#quill-output').html(quill.root.innerHTML);
+                });
+            {% endif %}
+            // quill.on('text-change', function(delta, oldDelta, source) {
+            //     $('#hidden_body').val(quill.root.innerHTML);
+            // });
+            $('form').submit(function(e) {
+                if (quill.getLength() == 1) {
+                    e.preventDefault();
+                    $('form').append('<span class="text-danger">This field is required</span>')
+                }
+                else {
+                    $('#hidden-body').val(quill.root.innerHTML);
+                }
+            });
+            quill.root.innerHTML = $('#hidden-body').val() ? $('#hidden-body').val() : ''
+        </script>
 {%- endmacro %}

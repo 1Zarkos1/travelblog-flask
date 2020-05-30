@@ -3,14 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">  
-    <link rel="stylesheet" href="{{ url_for('static', filename='reset.css') }}">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <!-- <link rel="stylesheet" href="{{ url_for('static', filename='reset.css') }}"> -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
     <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/globe-favi.png') }}">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    {% block link %}{% endblock %}
     {{ moment.include_jquery() }}
+    <!-- <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
     {{ moment.include_moment() }}
     {% if current_user.is_authenticated %}
         <script type="text/javascript">
@@ -34,20 +35,44 @@
     <title>Southeast Asia Travel</title>
 </head>
 <body>
-    <header>
-        <ul>
-            <a href="{{ url_for('main.news') }}"><li>News</li></a>
-            <a href="{{ url_for('main.guides') }}"><li>Guides</li></a>
-            <a href="{{ url_for('main.galleries') }}"><li>Galleries</li></a>
-            <a href="{{ url_for('main.countries') }}"><li>Countries</li></a>
-            <a href="{{ url_for('main.gear') }}"><li>Travel Gear</li></a>
-            <a href="{{ url_for('main.about_me') }}"><li>About</li></a>
+    <nav class="top-navbar">
+        <ul class="top-nav-list">
+            <div class="top-navbar-main">
+                <a href="{{ url_for('main.index') }}" class="top-nav-anchor">
+                    <li class="top-nav-item">Home</li>
+                </a>
+                <a href="{{ url_for('main.guides') }}" class="top-nav-anchor">
+                    <li class="top-nav-item">Guides</li>
+                </a>
+                <a href="{{ url_for('main.galleries') }}" class="top-nav-anchor">
+                    <li class="top-nav-item">Galleries</li>
+                </a>
+                <a href="{{ url_for('main.countries') }}" class="top-nav-anchor">
+                    <li class="top-nav-item">Countries</li>
+                </a>
+                <a href="{{ url_for('main.gear') }}" class="top-nav-anchor">
+                    <li class="top-nav-item">Gear</li>
+                </a>
+                <a href="{{ url_for('main.about_me') }}" class="top-nav-anchor">
+                    <li class="top-nav-item">About</li>
+                </a>
+            </div>
+            <div class="top-navbar-auth">
             {% if current_user.is_anonymous %}
-                <a href="{{ url_for('auth.signup') }}"><li>Sign up</li></a>
-                <a href="{{ url_for('auth.login') }}"><li>Log In</li></a>
+                <a href="{{ url_for('auth.signup') }}" class="top-nav-anchor">
+                    <li class="top-nav-item">Sign up</li>
+                </a>
+                <a href="{{ url_for('auth.login') }}" class="top-nav-anchor">
+                    <li class="top-nav-item">Log In</li>
+                </a>
             {% else %}
-                <a href="{{ url_for('main.user', username=current_user.username) }}">
-                    <li>
+                {% if current_user.is_authenticated and current_user.role %}
+                    <a href="/admin/" class="top-nav-anchor">
+                        <li class="top-nav-item">Admin</li>
+                    </a>
+                {% endif %}
+                <a href="{{ url_for('main.user', username=current_user.username) }}" class="top-nav-anchor">
+                    <li class="top-nav-item">
                         {{ current_user.username -}}
                         <span id="message-count" class="new-messages-nav">
                             {%- with count = current_user.received_messages.filter_by(seen=False).count() %}
@@ -56,12 +81,13 @@
                         </span>
                     </li>
                 </a>
-                <a href="{{ url_for('auth.logout') }}">
-                    <li>Log out</li>
+                <a href="{{ url_for('auth.logout') }}" class="top-nav-anchor">
+                    <li class="top-nav-item">Log out</li>
                 </a>
             {% endif %}
+            </div>
         </ul>
-    </header>
+    </nav>
     {% with messages = get_flashed_messages(with_categories=True) %}
     {% if messages %}
         {% for category, message in messages %}

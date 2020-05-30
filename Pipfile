@@ -22,11 +22,9 @@ pyjwt = "*"
 flask-moment = "*"
 flask-babel = "*"
 guess-language-spirit = "*"
-request = "*"
-requests = "*"
-rq = "*"
 email-validator = "*"
-bs4 = "*"
+flask-admin = "*"
+wtforms-components = "*"
 
 [requires]
 python_version = "3.8"

@@ -6,7 +6,7 @@
         </a>
     </div>
     <div class="article-body">
-        {{ article.body }}
+        {{ article.body|safe }}
     </div>
     {% if article.country_tags != None %}
         <div class="country-tags comment-bottom">

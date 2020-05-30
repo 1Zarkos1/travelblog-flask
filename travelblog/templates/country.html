@@ -14,14 +14,17 @@
                 </div>
             </div>
         </div>
-        {{ country.followers|length }}
-        <a href="{{ url_for('main.follow_country', id=country.id) }}">
-            {% if current_user in country.followers %}
-                Unfollow
-            {% else %}
-                Follow
-            {% endif %}
-        </a><hr/>
+        Followers: {{ country.followers|length }}
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('main.follow_country', id=country.id) }}">
+                {% if current_user in country.followers %}
+                    Unfollow
+                {% else %}
+                    Follow
+                {% endif %}
+            </a>
+        {% endif %}
+        <hr/>
         {% for article in articles.items %}
         {% include '_article.html' %}
         {% endfor %}<hr/ >

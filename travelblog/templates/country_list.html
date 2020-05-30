@@ -2,8 +2,8 @@
 
 {% block content %}
     {% for country in countries %}
-    <div>
-        <a href="{{ url_for('main.country_view', id=country.id) }}">
+    <div class="country-list">
+        <a href="{{ url_for('main.country_view', id=country.id) }}" class="country-tag">
             {{ country.name }}
         </a>
     </div>

@@ -1,4 +1,9 @@
 {% extends "base.html" %}
+{% from 'macros.html' import quill_editor %}
+
+{% block link scoped %}
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+{% endblock link %}
 
 {% block scripts %}
     <script type="text/javascript">
@@ -41,20 +46,35 @@
             var id = id
             event.preventDefault()
             var comHTML = document.getElementById(`body-${id}`)
-            var comment = comHTML.textContent;
+            var comment = comHTML.innerHTML;
             var input = document.getElementsByClassName('comment-form')[0].cloneNode(true)
+            console.log(input)
             input.removeChild(input.querySelector('legend'))
             input.querySelector('input[type=submit]').value = 'Edit'
-            input.getElementsByClassName('insert')[0].value = comment.trim()
+            
+            let tempDiv = document.createElement("div")
+            tempDiv.setAttribute('id', 'tempEditor')
+            let formNode = input.querySelector('.form-group:first-of-type')
+            formNode.replaceChild(tempDiv, input.querySelector('div.editor-container'))
+
             input.getElementsByClassName('hidden')[0].value = id
 
             comHTML.parentNode.replaceChild(input, comHTML)
+
+            var tempQuill = new Quill('#tempEditor', {
+                theme: 'snow',
+                modules: {
+                    toolbar: toolbarOptions,
+                }
+            });
+            tempQuill.root.innerHTML = comment.trim()
             
             function returnComment(e) {
                 e.preventDefault();
-                comHTML.textContent = input.getElementsByClassName('insert')[0].value;
+                comHTML.innerHTML = tempQuill.root.innerHTML;
                 var form = e.target;
                 var xhr = new XMLHttpRequest();
+                input.querySelector('.hidden-body').value = tempQuill.root.innerHTML
                 var fd = new FormData(form);
                 xhr.addEventListener( "error", function( event ) {
                     alert( 'Oops! Something went wrong.' );
@@ -66,13 +86,14 @@
             input.addEventListener('submit', returnComment, false)
         }
     </script>
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 {% endblock scripts %}
 
 {% block content %}
     <article class="article-container">
         <div class="article-title">{{ article.title }}</div>
         <div class="article-body">
-            {{ article.body }}
+            {{ article.body|safe }}
         </div>
         <small>
             {% for country in article.country_tags %}
@@ -116,13 +137,8 @@
                 </legend>
                 <div class="form-group">
                     {{ form.id(id='hidden', class_='hidden') }}
-                    <!-- {{ form.comment.label }} -->
-                    {{ form.comment(class_='form-control insert') }}
-                    {% for error in form.comment.errors %}
-                    <div class="text-danger">
-                        <small>[{{ error }}]</small>
-                    </div>
-                    {% endfor %}
+                    {{ form.hidden_body(id='hidden-body', class_='hidden-body') }}
+                    {{ quill_editor(type='comment', class='insert') }}
                 </div>
                 <div class="form-group">
                     {{ form.submit(class_='btn btn-primary') }}

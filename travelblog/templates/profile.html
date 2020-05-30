@@ -49,6 +49,11 @@
                     {{- "({})".format(count) if count else "" }}
                 {% endwith %}
             </a>
+            <div class="create-post">
+                <a href="{{ url_for('main.create_article') }}" class="btn btn-primary">
+                    Create Post
+                </a>
+            </div>
         {% endif %}
     </div><hr />
     {% for article in articles.items %}

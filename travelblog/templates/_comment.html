@@ -14,7 +14,7 @@
         {% endif %}
     </div>
     <div id="body-{{ comment.id }}" class="comment-body">
-        {{ comment.body }}
+        {{ comment.body|safe }}
     </div>
     <div class="comment-bottom">
         <!-- <span class="comment-bottom-button">

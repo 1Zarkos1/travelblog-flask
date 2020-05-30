@@ -5,10 +5,11 @@ from time import time
 
 import jwt
 from flask import current_app
-from flask_login import UserMixin
+from flask_login import UserMixin, current_user
+from flask_admin.contrib.sqla import ModelView
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from travelblog import db, login
+from travelblog import db, login, admin
 
 
 country_visitor_relation = db.Table(
@@ -64,7 +65,7 @@ class User(UserMixin, db.Model):
     username = db.Column(db.String(64), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     password_hash = db.Column(db.String(128))
-    confirmed = db.Column(db.Boolean(), default=False)
+    active = db.Column(db.Boolean())
 
     info = db.relationship('UserInfo', backref='user', uselist=False,
                            cascade='all')
@@ -100,6 +101,8 @@ class User(UserMixin, db.Model):
     disliked_articles = db.relationship(
         'Article', secondary=user_article_dislike_relation, lazy=True,
         backref='dislikes')
+
+    role = db.relationship('Role', backref='user', uselist=False)
 
     def __repr__(self):
         return f'<User {self.username}>'
@@ -175,11 +178,14 @@ class CountryInfo(db.Model):
     population = db.Column(db.Integer)
     land_area = db.Column(db.Integer)
     currency = db.Column(db.String(40))
+    currency_code = db.Column(db.String(3))
     language = db.Column(db.String(30))
     time_zone = db.Column(db.String(50))
+    time_offset = db.Column(db.String(10))
     weather = db.Column(db.Text(600))
     description = db.Column(db.Text(2000))
     region = db.Column(db.String(20))
+    subregion = db.Column(db.String(40))
     last_updated = db.Column(db.DateTime(), default=dt.utcnow)
 
     def __repr__(self):
@@ -199,7 +205,7 @@ class Article(db.Model):
         'Comment', backref='article', cascade='all', lazy='dynamic')
 
     def __repr__(self):
-        return (f'<Article {self.id} title {self.title}'
+        return (f'<Article {self.id} title {self.title} '
                 f'by user {self.article_author.username}')
 
 
@@ -229,3 +235,12 @@ class Message(db.Model):
 
     def __repr__(self):
         return f'<Message №{self.id} from {self.sender} to {self.recipient}>'
+
+
+class Role(db.Model):
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)
+    role_name = db.Column(db.String(30))
+    date_granted = db.Column(db.DateTime(), default=dt.utcnow)
+
+    def __repr__(self):
+        return f'<User {self.user_id} is {self.role_name}>'

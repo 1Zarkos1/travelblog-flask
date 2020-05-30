@@ -2,12 +2,15 @@ import os
 from datetime import datetime
 
 from flask import (render_template, redirect, request, url_for, flash, abort,
-                   json)
+                   json, escape)
 from flask_login import current_user, login_required
 
 from travelblog.main import bp
 from travelblog import db
-from travelblog.models import User, Country, Article, Comment, Message
+from travelblog.models import (User, Country, Article, Comment, Message,
+                               user_follower_followed_relation
+                               as user_fol_table, country_articletags_relation
+                               as coun_art_table)
 from travelblog.main.forms import (EditProfileForm, ArticleForm, CommentForm,
                                    MessageForm)
 
@@ -28,6 +31,27 @@ def index():
     return render_template('index.html', articles=articles)
 
 
+@bp.route('/feed/')
+@login_required
+def feed():
+    # print(current_user.follows)
+    page = request.args.get('page', 1, type=int)
+    fol_count = [country.id for country in current_user.followed_countries]
+    # print(Article.query.join(
+    #     user_fol_table, (user_fol_table.c.follower_id == current_user.id)).join(
+    #     coun_fol_table, (coun_fol_table.c.user_id == current_user.id)).filter(
+    #     (user_fol_table.c.followed_id == Article.user_id) | (coun_fol_table.c.country_id.in_(fol_count))))
+    articles = Article.query.join(
+        user_fol_table, (user_fol_table.c.follower_id == current_user.id)).join(
+        coun_art_table, (coun_art_table.c.article_id == Article.id)).filter(
+        (user_fol_table.c.followed_id == Article.user_id)
+        | (coun_art_table.c.country_id.in_(fol_count))).paginate(
+        page=page, per_page=10)
+    # articles = Article.query.filter(Article.article_author in (current_user.follows)).order_by(
+    #     Article.date_posted.desc()).paginate(page=page, per_page=2)
+    return render_template('index.html', articles=articles)
+
+
 @bp.route('/create_article/', methods=['GET', 'POST'])
 @login_required
 def create_article():
@@ -36,9 +60,9 @@ def create_article():
         country = Country.query.filter(
             Country.name.in_(form.country_tag.data)).all()
         article = Article(article_author=current_user,
-                          country_tags=country, title=form.title.data,
+                          country_tags=country_tag, title=form.title.data,
                           article_type=form.article_type.data,
-                          body=form.body.data)
+                          body=form.hidden_body.raw_data[1])
         db.session.add(article)
         db.session.commit()
         flash('Your article was added successfully!', category='info')
@@ -53,14 +77,14 @@ def edit_article(id):
     if current_user != article.article_author:
         abort(403)
     form = ArticleForm(article_type=article.article_type, title=article.title,
-                       country_tag=article.country_tags, body=article.body)
+                       country_tag=article.country_tags, hidden_body=article.body)
     if form.validate_on_submit():
         country = Country.query.filter(
             Country.name.in_(form.country_tag.data)).all()
         article.country_tags = country
         article.title = form.title.data
         article.article_type = form.article_type.data
-        article.body = form.body.data
+        article.body = form.hidden_body.raw_data[1]
         article.last_updated = datetime.utcnow()
         db.session.commit()
         flash('Your article was updated!', category='info')
@@ -76,11 +100,11 @@ def article_view(id):
         comment_id = form.id.raw_data[1]
         if comment_id:
             comment = Comment.query.get_or_404(int(comment_id))
-            comment.body = form.comment.data
+            comment.body = form.hidden_body.raw_data[1]
             comment.last_updated = datetime.utcnow()
         else:
             comment = Comment(article=article, comment_author=current_user,
-                              body=form.comment.data)
+                              body=form.hidden_body.raw_data[1])
             db.session.add(comment)
         db.session.commit()
         return redirect(url_for('main.article_view', id=id))
@@ -123,7 +147,6 @@ def country_view(id):
     page = request.args.get('page', 1, type=int)
     country = Country.query.get(id)
     articles = country.articles.paginate(page=page, per_page=2)
-    print(articles.prev_num)
     return render_template('country.html', country=country, articles=articles)
 
 
@@ -210,8 +233,10 @@ def send_message(id):
 @bp.route('/private_messages/')
 @login_required
 def messages():
-    received = current_user.received_messages
-    sent = current_user.sent_messages
+    received = current_user.received_messages.filter(
+        (Message.deleted == None) | (Message.deleted == False)).all()
+    sent = current_user.sent_messages.filter(
+        (Message.deleted == None) | (Message.deleted == True)).all()
     return render_template('private_messages.html', sent=sent,
                            received=received, now=datetime.utcnow())
 
@@ -220,9 +245,9 @@ def messages():
 @login_required
 def message(id):
     message = Message.query.get_or_404(id)
-    if current_user != message.recipient:
+    if current_user not in (message.recipient, message.sender):
         abort(403)
-    if message.seen == False:
+    if current_user == message.recipient and message.seen == False:
         message.seen = True
         db.session.commit()
     return render_template('message.html', message=message)
@@ -234,7 +259,16 @@ def delete_message(id):
     message = Message.query.get_or_404(id)
     if current_user not in (message.recipient, message.sender):
         abort(403)
-    db.session.delete(message)
+    if current_user == message.sender:
+        if message.deleted == None:
+            message.deleted = False
+        elif message.deleted == True:
+            db.session.delete(message)
+    else:
+        if message.deleted == None:
+            message.deleted = True
+        elif message.deleted == False:
+            db.session.delete(message)
     db.session.commit()
     return redirect(url_for('main.messages'))
 
@@ -277,5 +311,7 @@ def follow_user(username):
 @bp.route('/check_new_messages/')
 @login_required
 def check_new_messages():
-    new_messages = user.received_messages.filter_by(seen=False).count()
+    new_messages = current_user.received_messages.filter(
+        (Message.deleted == None) | (Message.deleted == False),
+        Message.seen == False).count()
     return json.dumps(new_messages)

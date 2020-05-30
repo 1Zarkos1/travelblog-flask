@@ -5,30 +5,61 @@ body {
     font-family: Arial, Helvetica, sans-serif;
 }
 
-ul {
+.top-nav-list {
     display: flex;
     flex-direction: row;
-    justify-content: center;
+    justify-content: space-between;
+    padding-left: 0px;
 }
 
-li {
+.top-nav-item {
+    font-style: none;
     list-style: none;
     display: inline-block;
     font-size: 1rem;
-    padding: 2rem;
+    padding: 1.5rem;
     box-sizing: border-box;
-    max-height: 5rem;
+    max-height: 4rem;
 }
 
-a {
+.top-navbar-main, .top-navbar-auth {
+    display: flex;
+}
+
+.top-nav-anchor {
     color: black;
     font-style: none;
 }
 
-li:hover {
+.top-nav-item:hover {
     border-bottom: solid 3px lightgray;
 }
 
+.pagination {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.pagination-page, .pagination-active-page, .pagination-next-page, 
+.pagination-prev-page {
+    font-style: none;
+    list-style: none;
+    font-size: 1rem;
+    padding: 0.15rem;
+    box-sizing: border-box;
+}
+
+.pagination-prev-page {
+    background-image: url('img/utils/left_arrow.png');
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-size: 100% 100%;
+}
+
+.pagination-next-page {
+    background: url('img/utils/right_arrow.png') no-repeat center center fixed;
+    background-size: 100% auto;
+}
 
 footer {
     color: grey;
@@ -117,6 +148,10 @@ footer {
     text-align: justify;
 }
 
+.comment-body p {
+    margin-bottom: 0rem;
+}
+
 .comment-bottom {
     font-size: 0.9rem;
 }
@@ -151,4 +186,24 @@ footer {
     color: gray;
     font-size: 0.9rem;
     font-weight: 400;
+}
+
+#quill-output {
+    word-wrap: break-word;
+}
+
+.ql-align-center {
+    text-align: center;
+}
+
+.country-list {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+}
+
+.country-tag {
+    width: 30%;
 }

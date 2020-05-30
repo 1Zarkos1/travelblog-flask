@@ -29,7 +29,8 @@ def signup():
             url_for('auth.confirm_email', token=new_user.make_token())
         print(link)
         send_mail(new_user, 'email', link)
-        flash('Confirmation message has been sent to your email', category='info')
+        flash('Confirmation message has been sent to your email',
+              category='info')
         return redirect(url_for('auth.login'))
     return render_template('auth/signup.html', form=form)
 
@@ -43,13 +44,19 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         if user and user.check_password(form.password.data):
-            if user.confirmed == False:
-                flash('You need to verify your email first', category='danger')
+            if user.active in (False, None):
+                if user.active == None:
+                    flash('You need to verify your email first',
+                          category='danger')
+                elif user.active == False:
+                    flash('Your account is disabled. For more information you '
+                          'can contact us via email', category='danger')
                 return redirect(url_for('auth.login'))
             login_user(user, remember=form.remember.data)
             next = request.args.get('next')
             if is_safe_url(request, next):
-                flash('You have been succesfully logged in!', category='success')
+                flash('You have been succesfully logged in!',
+                      category='success')
                 return redirect(next or url_for('main.index'))
             else:
                 return redirect(url_for('main.index'))
@@ -97,10 +104,27 @@ def confirm_email(token):
         flash('The supplied link is incorrect or already expired.',
               category='danger')
     else:
-        user.confirmed = True
+        user.active = True
         db.session.commit()
         flash('Your email has been verified', category='success')
     return redirect(url_for('main.index'))
+
+
+@bp.route('/resend_confirmation_link/', methods=['GET', 'POST'])
+def resend_confirmation_link():
+    if current_user.is_authenticated:
+        flash('You are already autentificated!', category='info')
+        return redirect(url_for('main.index'))
+    form = RequestPasswordResetForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        link = request.host_url + \
+            url_for('auth.confirm_email', token=user.make_token())
+        send_mail(user, 'email', link)
+        flash('Confirmation message has been sent to your email',
+              category='info')
+        return redirect(url_for('auth.login'))
+    return render_template('auth/request_email_confirmation.html', form=form)
 
 
 @bp.route('/logout/')

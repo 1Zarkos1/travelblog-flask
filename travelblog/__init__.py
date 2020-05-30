@@ -6,6 +6,7 @@ from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_mail import Mail
 from flask_moment import Moment
+from flask_admin import Admin
 
 from travelblog.config import Config
 
@@ -17,6 +18,7 @@ login.login_message = 'Please log in to access this page.'
 login.login_message_category = 'info'
 mail = Mail()
 moment = Moment()
+admin = Admin(name='travelblog', template_mode='bootstrap3')
 
 
 def create_app(config_class=Config):
@@ -29,6 +31,7 @@ def create_app(config_class=Config):
     login.init_app(app)
     mail.init_app(app)
     moment.init_app(app)
+    admin.init_app(app)
 
     from travelblog.errors import bp as errors_bp
     app.register_blueprint(errors_bp)
@@ -43,3 +46,4 @@ def create_app(config_class=Config):
 
 
 from travelblog import models
+from travelblog import admin_views
