@@ -50,6 +50,7 @@
             var input = document.getElementsByClassName('comment-form')[0].cloneNode(true)
             console.log(input)
             input.removeChild(input.querySelector('legend'))
+            input.setAttribute('class', 'sub-form')
             input.querySelector('input[type=submit]').value = 'Edit'
             
             let tempDiv = document.createElement("div")
@@ -130,7 +131,7 @@
     </section>
     {% if current_user.is_authenticated %}
         <div>
-            <form action="" method="POST" class="comment-form">
+            <form action="" method="POST" class="comment-form main-form">
                 {{ form.hidden_tag() }}
                 <legend>
                     Leave your comment

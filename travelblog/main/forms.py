@@ -2,9 +2,10 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed
 from wtforms.fields.html5 import DateField
 from wtforms.fields import (StringField, SubmitField, TextAreaField,
-                            SelectMultipleField, SelectField, FileField, 
+                            SelectMultipleField, SelectField, FileField,
                             HiddenField)
-from wtforms.ext.sqlalchemy.fields import QuerySelectMultipleField
+from wtforms.ext.sqlalchemy.fields import (QuerySelectMultipleField,
+                                           QuerySelectField)
 from wtforms.validators import DataRequired, ValidationError, Length
 
 from travelblog.models import User, Country
@@ -17,9 +18,8 @@ class EditProfileForm(FlaskForm):
     birthdate = DateField('Birthdate')
     gender = SelectField('Gender', choices=[('M', 'Male'), ('F', 'Female')])
     job = StringField('Your job')
-    origin_country = SelectField('Origin country',
-                                 choices=[('ru', 'Russia'),
-                                          ('us', 'United States')])
+    origin_country = QuerySelectField(
+        label='Origin Country', get_label='name', query_factory=lambda: Country.query)
     about = TextAreaField('About You')
     submit = SubmitField('Submit')
 
@@ -29,11 +29,12 @@ class ArticleForm(FlaskForm):
         'Guide', 'Guide'), ('Blog', 'Blog'), ('News', 'News')])
     title = StringField(
         'Title', validators=[DataRequired('Article must have a title!')])
-    country_tag = SelectMultipleField(
-        'Country tags', choices=[(country.name, country.name)
-                                 for country in Country.get_country_list()])
-    # country_tag = QuerySelectMultipleField(
-    #     label='Country tags', get_label='name', query_factory=lambda: Country.query)
+    # country_tag = SelectMultipleField(
+    #     'Country tags', choices=[(country.name, country.name)
+    #                              for country in Country.get_country_list()])
+    country_tag = QuerySelectMultipleField(
+        label='Country tags', get_label='name',
+        query_factory=lambda: Country.query)
     # body = TextAreaField(
     #     'Post body', validators=[DataRequired('Article must have some text!')])
     hidden_body = HiddenField()

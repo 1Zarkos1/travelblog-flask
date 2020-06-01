@@ -12,15 +12,6 @@
 {% endblock scripts %}
 
 {% block content %}
-    {% with messages = get_flashed_messages(with_categories=True) %}
-    {% if messages %}
-        {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
-    {% endwith %}
     <div class="content-section">
         {{ article_form(form, 'Create', 'Create article') }}
     </div>

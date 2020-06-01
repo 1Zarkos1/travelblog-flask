@@ -2,13 +2,18 @@
 {% from 'macros.html' import pagination %}
 
 {% block content %}
+    {% if current_user.is_authenticated %}
+        <form action="{{ url_for('main.index') }}" class="followed" method="POST">
+            <label for='follow'>Followed Only</label><input type="checkbox" name="follow" id="follow" onchange="javascript:document.querySelector('.followed').submit()" {{ 'checked' if session['feed'] else ''}}>
+        </form>
+    {% endif %}
     <div class="articles-list">
         {% for article in articles.items %}
             {% include '_article.html' %}
         {% endfor %}
     </div>
     <hr/ >
-    <div class=pagination>
+    <div class='pagination'>
         {{ pagination(articles, 'main.index') }}
     </div>
 {% endblock %}

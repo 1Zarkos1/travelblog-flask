@@ -206,7 +206,7 @@ class Article(db.Model):
 
     def __repr__(self):
         return (f'<Article {self.id} title {self.title} '
-                f'by user {self.article_author.username}')
+                f'by user {self.article_author.username}>')
 
 
 class Comment(db.Model):

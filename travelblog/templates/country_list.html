@@ -1,11 +1,60 @@
 {% extends "base.html" %}
 
+{% block scripts %}
+    <script>
+        function searchFunc() {
+        // Declare variables
+        var input, filter, ul, li, a, i, txtValue;
+        input = document.getElementById('myInput');
+        filter = input.value.toUpperCase();
+        list = document.getElementById("country-list");
+        lis = list.getElementsByClassName('country-item');
+
+
+        if (input.value.length > 0) {
+            $('div.country-letter').css('display', 'none');
+        }
+        else {
+            $('div.country-letter').css('display', '');
+        }
+        
+        // Loop through all list items, and hide those who don't match the search query
+        for (i = 0; i < lis.length; i++) {
+            a = lis[i].getElementsByTagName("a")[0];
+            txtValue = a.textContent || a.innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+            lis[i].style.display = "";
+            } else {
+            lis[i].style.display = "none";
+            }
+        }
+        }
+    </script>
+{% endblock scripts %}
+
 {% block content %}
-    {% for country in countries %}
-    <div class="country-list">
-        <a href="{{ url_for('main.country_view', id=country.id) }}" class="country-tag">
-            {{ country.name }}
-        </a>
+    <div class="country-selection">
+        <div class="alpha-selection">
+            {% for char in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"|list %}
+                <a href="#{{ char }}" class="alpha-link">{{ char }}</a>
+            {% endfor %}
+        </div>
+        <input type="text" class="form-control" id="myInput" onkeyup="searchFunc()" placeholder="Search for country...">
     </div>
-    {% endfor %}
-{% endblock %}
+    <div class="country-list" id='country-list'>
+        {% set vars = {'letter': ''} %}
+        {% for country in countries %}
+            {% if vars['letter'] != country.name[0] %}
+                {% if vars.update({'letter': country.name[0]}) %}{% endif %}
+                <div class="country-letter" id="{{ vars['letter'] }}">
+                    {{ vars['letter'] }}
+                </div>
+            {% endif %}
+            <div class="country-item">
+                <a href="{{ url_for('main.country_view', id=country.id) }}" class="country-tag">
+                    {{ country.name }}
+                </a>
+            </div>
+        {% endfor %}
+    </div>
+{% endblock content %}

@@ -1,0 +1,52 @@
+<a href="{{ url_for('main.user', username=article.article_author.username) }}"></a>
+<div class="small-article-container">
+    <div class="article-title">
+        <a href="{{ url_for('main.article_view', id=article.id) }}">
+            {{ article.title }}
+        </a>
+    </div>
+    <div class="article-body">
+        {{ article.body|safe }}
+    </div>
+    {% if article.country_tags != None %}
+        <div class="country-tags comment-bottom">
+            {% for country in article.country_tags %}
+                <a href="{{ url_for('main.country_view', id=country.id) }}">
+                    {{ country.name }}
+                </a>
+            {% endfor %}
+        </div>
+    {% endif %}
+    <div class="comment-top">
+        <span class="comment-author">
+            {{ article.article_author.username }}
+        </span>
+        <span class="comment-date">
+            {{ moment(article.date_posted).fromNow() }}
+        </span>
+        <a href="{{ url_for('main.article_view', id=article.id) }}/#comments">
+            Comments({{ article.comments.count() }})
+        </a>
+    </div class="comment-top">
+</div>
+
+<script type="text/javascript">
+    function makequery(value) {
+        if (value.length > 2) {
+            $.ajax({type: "GET",
+                url: "{{ url_for('main.search_query') }}"+`?query=${value}`,
+                success:function(result) {
+                    if (result != 0) {
+                        document.querySelector('#output').innerHTML = result;
+                    }
+                    $('#message-count').text
+                },
+                error:function(result) {
+                    alert('error');
+                }
+            });
+        }
+    }
+</script>
+<div id="output"></div>
+<input type="text" name="" id="search" onkeyup="javascript:makequery(this.value)">

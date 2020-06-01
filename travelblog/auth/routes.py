@@ -17,7 +17,7 @@ from travelblog.utils import is_safe_url, send_mail
 def signup():
     if current_user.is_authenticated:
         flash('You are already logged in!', category='info')
-        return redirect(url_for('main.news'))
+        return redirect(url_for('main.index'))
     form = RegistrationForm()
     if form.validate_on_submit():
         new_user = User(username=form.username.data, email=form.email.data)
@@ -39,7 +39,7 @@ def signup():
 def login():
     if current_user.is_authenticated:
         flash('You are already logged in!', category='info')
-        return redirect(url_for('main.news'))
+        return redirect(url_for('main.index'))
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
@@ -132,7 +132,7 @@ def logout():
     if current_user.is_authenticated:
         logout_user()
         flash('You have been logged out!', category='info')
-        return redirect(url_for('main.news'))
+        return redirect(url_for('main.index'))
 
 
 # def send_mail(message):

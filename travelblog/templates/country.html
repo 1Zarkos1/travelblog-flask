@@ -1,34 +1,62 @@
 {% extends "base.html" %}
 {% from 'macros.html' import pagination %}
+
+{% block scripts %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.26.0/moment-with-locales.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.31/moment-timezone-with-data.js"></script>
+    <script>
+    $('.current-time').ready(() => $('.current-time').text(moment().tz({{ country.info.time_zone|tojson }}).format('HH:mm:ss')))</script>
+{% endblock scripts %}
+
 {% block content %}
-        <div class="user-profile">
+    <div class="country-header">{{ country.name }}</div>
+    <div class="country-info">
+        <div class="imgs">
+            <a href="{{ url_for('static', filename='img/flags/')+country.code+'.png' }}" class="img-link">
+                <img src="{{ url_for('static', filename='img/flags/')+country.code+'.png' }}" alt="Flag of {{ country.name }}" class="country-flag">
+            </a>
+        </div>
+        <div class="country-data">
             <div class="user-profile-info">
                 <div class="country-profile-field">
-                    Name: {{ country.name }}
+                    Short Code: {{ country.code }}
                 </div>
                 <div class="country-profile-field">
-                    Code: {{ country.code }}
+                    Capital: {{ country.info.capital }}
                 </div>
                 <div class="country-profile-field">
-                    Population: {{ country.info.population }}
+                    Population: {{ "{:,}".format(country.info.population) }} people
+                </div>
+                <div class="country-profile-field">
+                    Land Area: {{ country.info.land_area }} sq km
+                </div>
+                <div class="country-profile-field">
+                    Currency: {{ country.info.currency }}
+                </div>
+                <div class="country-profile-field">
+                    World Region: {{ country.info.region }} ({{ country.info.subregion }})
+                </div>
+                <div class="country-profile-field">
+                    Time: <span class="current-time">some</span> ({{ country.info.time_offset }})
                 </div>
             </div>
         </div>
-        Followers: {{ country.followers|length }}
-        {% if current_user.is_authenticated %}
-            <a href="{{ url_for('main.follow_country', id=country.id) }}">
-                {% if current_user in country.followers %}
-                    Unfollow
-                {% else %}
-                    Follow
-                {% endif %}
-            </a>
-        {% endif %}
-        <hr/>
-        {% for article in articles.items %}
-        {% include '_article.html' %}
-        {% endfor %}<hr/ >
-        <div class="pagination">
-            {{ pagination(articles, 'main.country_view', id=country.id) }}
-        </div>
+    </div>
+    Followers: {{ country.followers|length }}
+    {% if current_user.is_authenticated %}
+        <a href="{{ url_for('main.follow_country', id=country.id) }}">
+            {% if current_user in country.followers %}
+                Unfollow
+            {% else %}
+                Follow
+            {% endif %}
+        </a>
+    {% endif %}
+    <hr/>
+    {% for article in articles.items %}
+    {% include '_article.html' %}
+    {% endfor %}<hr/ >
+    <div class="pagination">
+        {{ pagination(articles, 'main.country_view', id=country.id) }}
+    </div>
 {% endblock content %}

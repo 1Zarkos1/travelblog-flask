@@ -1,10 +1,12 @@
 {% macro pagination(pag_obj, path, left_edge=1, left_current=1, 
     right_current=1, right_edge=2) -%}
-    <li class="page-item{{ '' if pag_obj.has_prev else ' disabled' }}">
-        <a href="{{ url_for(path, page=pag_obj.prev_num, **kwargs) }}" class="page-link">
-            <span aria-hidden="true">&laquo;</span>
-        </a>
-    </li>
+    {% if pag_obj.pages %}
+        <li class="page-item{{ '' if pag_obj.has_prev else ' disabled' }}">
+            <a href="{{ url_for(path, page=pag_obj.prev_num, **kwargs) }}" class="page-link">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+        </li>
+    {% endif %}
     {% for page in pag_obj.iter_pages(left_edge, left_current, right_current, 
                                       right_edge) %}
         {% if page %}
@@ -21,15 +23,17 @@
             </li>
         {% endif %}
     {% endfor %}
-    <li class="page-item{{ '' if pag_obj.has_next else ' disabled' }}">
-        <a href="{{ url_for(path, page=pag_obj.next_num, **kwargs) }}" class="page-link">
-            <span aria-hidden="true">&raquo;</span>
-        </a>
-    </li>
+    {% if pag_obj.pages %}
+        <li class="page-item{{ '' if pag_obj.has_next else ' disabled' }}">
+            <a href="{{ url_for(path, page=pag_obj.next_num, **kwargs) }}" class="page-link">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+    {% endif %}
 {%- endmacro %}
 
-{% macro article_form(form, legend, submit, article=None, id=None) -%}
-    <form action="" method="post" enctype="multipart/form-data" novalidate>
+{% macro article_form(form, legend, submit, article=None, id=None, class='main-form') -%}
+    <form action="" method="post" enctype="multipart/form-data" class="{{ class }}" novalidate>
         {{ form.hidden_tag() }}
         <fieldset class="form-group">
             <legend class="border-bottom mb-4">
@@ -119,13 +123,13 @@
             // quill.on('text-change', function(delta, oldDelta, source) {
             //     $('#hidden_body').val(quill.root.innerHTML);
             // });
-            $('form').submit(function(e) {
+            $('.main-form').submit(function(e) {
                 if (quill.getLength() == 1) {
                     e.preventDefault();
-                    $('form').append('<span class="text-danger">This field is required</span>')
+                    $('.main-form').append('<span class="text-danger">This field is required</span>')
                 }
                 else {
-                    $('#hidden-body').val(quill.root.innerHTML);
+                    $('.main-form #hidden-body').val(quill.root.innerHTML);
                 }
             });
             quill.root.innerHTML = $('#hidden-body').val() ? $('#hidden-body').val() : ''

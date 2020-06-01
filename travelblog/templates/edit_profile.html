@@ -1,14 +1,23 @@
 {% extends "base.html" %}
+
+{% block scripts %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            function displayImg(input) {
+                if (input.files && input.files[0]) {
+                    var reader = new FileReader();
+                    reader.readAsDataURL(input.files[0]);
+                    reader.onload = function (e) {
+                        $('#img-output').attr('src', e.target.result);
+                    };
+                };
+            };
+            $("#img-input").change(function () { displayImg(this) });
+        })
+    </script>
+{% endblock scripts %}
+
 {% block content %}
-    {% with messages = get_flashed_messages(with_categories=True) %}
-    {% if messages %}
-        {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
-    {% endwith %}
     <div class="content-section">
         <form action="" method="post" enctype="multipart/form-data" novalidate>
             {{ form.hidden_tag() }}
@@ -18,8 +27,8 @@
                 </legend>
                 <div class="form-group">
                     {{ form.avatar.label }}<br/>
-                    <img class="user-profile-img" src="{{ url_for('static', filename='img/avatars/{}'.format(current_user.info.avatar)) }}">
-                    {{ form.avatar(class_='form-control') }}
+                    <img class="user-profile-img" id="img-output" src="{{ url_for('static', filename='img/avatars/{}'.format(current_user.info.avatar)) }}">
+                    {{ form.avatar(class_='form-control', id='img-input') }}
                     {% for error in form.avatar.errors %}
                     <div class="text-danger">
                         <small>[{{ error }}]</small>

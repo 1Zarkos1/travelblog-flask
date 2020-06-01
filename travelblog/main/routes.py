@@ -2,7 +2,7 @@ import os
 from datetime import datetime
 
 from flask import (render_template, redirect, request, url_for, flash, abort,
-                   json, escape)
+                   json, escape, current_app, session)
 from flask_login import current_user, login_required
 
 from travelblog.main import bp
@@ -23,33 +23,46 @@ def before_request():
 
 
 @bp.route('/')
-@bp.route('/index/')
+@bp.route('/index/', methods=['GET', 'POST'])
 def index():
     page = request.args.get('page', 1, type=int)
-    articles = Article.query.order_by(
-        Article.date_posted.desc()).paginate(page=page, per_page=2)
+    print(request.method)
+    if request.method == 'POST':
+        session['feed'] = not session.get('feed', False)
+        return redirect(url_for('main.index'))
+    if session.get('feed', False) == False or current_user.is_anonymous:
+        articles = Article.query.order_by(
+            Article.date_posted.desc()).paginate(page=page, per_page=2)
+    else:
+        fol_count = [country.id for country in current_user.followed_countries]
+        articles = db.session.query(Article).join(
+            user_fol_table, (user_fol_table.c.follower_id == current_user.id))\
+            .join(coun_art_table, (coun_art_table.c.article_id == Article.id))\
+            .filter((user_fol_table.c.followed_id == Article.user_id)
+            | (coun_art_table.c.country_id.in_(fol_count))).distinct().order_by(
+            Article.date_posted.desc()).paginate(page=page, per_page=2)
     return render_template('index.html', articles=articles)
 
 
-@bp.route('/feed/')
-@login_required
-def feed():
-    # print(current_user.follows)
-    page = request.args.get('page', 1, type=int)
-    fol_count = [country.id for country in current_user.followed_countries]
-    # print(Article.query.join(
-    #     user_fol_table, (user_fol_table.c.follower_id == current_user.id)).join(
-    #     coun_fol_table, (coun_fol_table.c.user_id == current_user.id)).filter(
-    #     (user_fol_table.c.followed_id == Article.user_id) | (coun_fol_table.c.country_id.in_(fol_count))))
-    articles = Article.query.join(
-        user_fol_table, (user_fol_table.c.follower_id == current_user.id)).join(
-        coun_art_table, (coun_art_table.c.article_id == Article.id)).filter(
-        (user_fol_table.c.followed_id == Article.user_id)
-        | (coun_art_table.c.country_id.in_(fol_count))).paginate(
-        page=page, per_page=10)
-    # articles = Article.query.filter(Article.article_author in (current_user.follows)).order_by(
-    #     Article.date_posted.desc()).paginate(page=page, per_page=2)
-    return render_template('index.html', articles=articles)
+# @bp.route('/feed/')
+# @login_required
+# def feed():
+#     # print(current_user.follows)
+#     page = request.args.get('page', 1, type=int)
+#     fol_count = [country.id for country in current_user.followed_countries]
+#     # print(Article.query.join(
+#     #     user_fol_table, (user_fol_table.c.follower_id == current_user.id)).join(
+#     #     coun_fol_table, (coun_fol_table.c.user_id == current_user.id)).filter(
+#     #     (user_fol_table.c.followed_id == Article.user_id) | (coun_fol_table.c.country_id.in_(fol_count))))
+#     articles = Article.query.join(
+#         user_fol_table, (user_fol_table.c.follower_id == current_user.id)).join(
+#         coun_art_table, (coun_art_table.c.article_id == Article.id)).filter(
+#         (user_fol_table.c.followed_id == Article.user_id)
+#         | (coun_art_table.c.country_id.in_(fol_count))).paginate(
+#         page=page, per_page=10)
+#     # articles = Article.query.filter(Article.article_author in (current_user.follows)).order_by(
+#     #     Article.date_posted.desc()).paginate(page=page, per_page=2)
+#     return render_template('index.html', articles=articles)
 
 
 @bp.route('/create_article/', methods=['GET', 'POST'])
@@ -57,10 +70,10 @@ def feed():
 def create_article():
     form = ArticleForm()
     if form.validate_on_submit():
-        country = Country.query.filter(
-            Country.name.in_(form.country_tag.data)).all()
+        # country = Country.query.filter(
+        #     Country.name.in_(form.country_tag.data)).all()
         article = Article(article_author=current_user,
-                          country_tags=country_tag, title=form.title.data,
+                          country_tags=form.country_tag.data, title=form.title.data,
                           article_type=form.article_type.data,
                           body=form.hidden_body.raw_data[1])
         db.session.add(article)
@@ -138,6 +151,8 @@ def image(ref):
 
 @bp.route('/countries/')
 def countries():
+    print(current_app.jinja_env.lstrip_blocks)
+    print(current_app.jinja_env.trim_blocks)
     country_list = Country.query.all()
     return render_template('country_list.html', countries=country_list)
 
@@ -188,7 +203,7 @@ def edit_profile():
         user_info.birthdate = form.birthdate.data
         user_info.gender = form.gender.data
         user_info.job = form.job.data
-        user_info.origin_country = form.origin_country.data
+        user_info.origin_country = form.origin_country.data.name
         user_info.about = form.about.data
         db.session.commit()
         return redirect(url_for('main.user', username=current_user.username))
@@ -315,3 +330,10 @@ def check_new_messages():
         (Message.deleted == None) | (Message.deleted == False),
         Message.seen == False).count()
     return json.dumps(new_messages)
+
+
+# @bp.route('/search_query/')
+# def search_query():
+#     query = request.args.get('query', '')
+#     articles = Article.query.filter(Article.title.contains(query)).first()
+#     return render_template('_search_query.html', article=articles)
