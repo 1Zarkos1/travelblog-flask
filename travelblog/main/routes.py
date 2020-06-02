@@ -39,7 +39,7 @@ def index():
             user_fol_table, (user_fol_table.c.follower_id == current_user.id))\
             .join(coun_art_table, (coun_art_table.c.article_id == Article.id))\
             .filter((user_fol_table.c.followed_id == Article.user_id)
-            | (coun_art_table.c.country_id.in_(fol_count))).distinct().order_by(
+                    | (coun_art_table.c.country_id.in_(fol_count))).distinct().order_by(
             Article.date_posted.desc()).paginate(page=page, per_page=2)
     return render_template('index.html', articles=articles)
 
@@ -332,8 +332,15 @@ def check_new_messages():
     return json.dumps(new_messages)
 
 
-# @bp.route('/search_query/')
-# def search_query():
-#     query = request.args.get('query', '')
-#     articles = Article.query.filter(Article.title.contains(query)).first()
-#     return render_template('_search_query.html', article=articles)
+@bp.route('/search_query/')
+def search_query():
+    query = request.args.get('query', '')
+    subject = request.args.get('subject', '')
+    if query:
+        articles = Article.query.filter(Article.title.contains(query)).limit(3).all()
+        users = User.query.filter(User.username.contains(query)).limit(3).all()
+        countries = Country.query.filter(Country.name.contains(query)).limit(3).all()
+
+        return render_template('_search_query.html', articles=articles,
+                            countries=countries, users=users)
+    return ''

@@ -40,20 +40,22 @@
         {% endif %}
     </div>
     <div class="user-info">
-        {% if current_user.is_authenticated and user != current_user %}
-            <a href="{{ url_for('main.send_message', id=user.id) }}">Send private message</a>
-        {% else %}
-            <a href="{{ url_for('main.messages') }}">
-                Messages
-                {%- with count = current_user.received_messages.filter_by(seen=False).count() %}
-                    {{- "({})".format(count) if count else "" }}
-                {% endwith %}
-            </a>
-            <div class="create-post">
-                <a href="{{ url_for('main.create_article') }}" class="btn btn-primary">
-                    Create Post
+        {% if current_user.is_authenticated %}
+            {% if user != current_user %}
+                <a href="{{ url_for('main.send_message', id=user.id) }}">Send private message</a>
+            {% else %}
+                <a href="{{ url_for('main.messages') }}">
+                    Messages
+                    {%- with count = current_user.received_messages.filter_by(seen=False).count() %}
+                        {{- "({})".format(count) if count else "" }}
+                    {% endwith %}
                 </a>
-            </div>
+                <div class="create-post">
+                    <a href="{{ url_for('main.create_article') }}" class="btn btn-primary">
+                        Create Post
+                    </a>
+                </div>
+            {% endif %}
         {% endif %}
     </div><hr />
     {% for article in articles.items %}

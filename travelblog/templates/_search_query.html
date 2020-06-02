@@ -1,52 +1,53 @@
-<a href="{{ url_for('main.user', username=article.article_author.username) }}"></a>
-<div class="small-article-container">
-    <div class="article-title">
-        <a href="{{ url_for('main.article_view', id=article.id) }}">
-            {{ article.title }}
-        </a>
-    </div>
-    <div class="article-body">
-        {{ article.body|safe }}
-    </div>
-    {% if article.country_tags != None %}
-        <div class="country-tags comment-bottom">
-            {% for country in article.country_tags %}
-                <a href="{{ url_for('main.country_view', id=country.id) }}">
+{% if articles %}
+    <h5 class="article-search-title">Articles</h5>
+    {% for article in articles %}
+        <div class="small-article-container">
+            <a href="{{ url_for('main.article_view', id=article.id) }}">
+                {{ article.title }}
+            </a>
+            <div class="article-body">
+                {{ (article.body|safe)[:50] }}...
+            </div>
+            <div class="comment-top">
+                <a href="{{ url_for('main.user', username=article.article_author.name) }}" style="margin-right: 0.7rem">
+                    by {{ article.article_author.username }}
+                </a>
+                <a href="{{ url_for('main.article_view', id=article.id) }}/#comments">
+                    Comments({{ article.comments.count() }})
+                </a>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+
+{% if users %}
+    <h5>Users</h5>
+    {% for user in users %}
+        <div class="search-query-container">
+            <div class="userimg-search-container">
+                <img class="user-search-img" src="{{ url_for('static', filename='img/avatars/{}'.format(user.info.avatar)) }}" style="width: 2rem; height: auto;">
+            </div>
+            <div class=username-search-container>
+                <a href="{{ url_for('main.user', username=user.username) }}" class="username">
+                    {{ user.username }}
+                </a>
+            </div>
+        </div>
+    {% endfor %}
+{% endif %}
+
+{% if countries %}
+    <h5>Countries</h5>
+    {% for country in countries %}
+        <div class="search-query-container">
+            <a href="{{ url_for('static', filename='img/flags/')+country.code+'.png' }}" class="img-link">
+                <img src="{{ url_for('static', filename='img/flags/')+country.code+'.png' }}" alt="Flag of {{ country.name }}" class="country-flag" style="width: 2rem; height: auto;">
+            </a>
+            <div class="country-search-name">
+                <a href="{{ url_for('main.country_view', id=country.id) }}" class="county-search-name">
                     {{ country.name }}
                 </a>
-            {% endfor %}
+            </div>
         </div>
-    {% endif %}
-    <div class="comment-top">
-        <span class="comment-author">
-            {{ article.article_author.username }}
-        </span>
-        <span class="comment-date">
-            {{ moment(article.date_posted).fromNow() }}
-        </span>
-        <a href="{{ url_for('main.article_view', id=article.id) }}/#comments">
-            Comments({{ article.comments.count() }})
-        </a>
-    </div class="comment-top">
-</div>
-
-<script type="text/javascript">
-    function makequery(value) {
-        if (value.length > 2) {
-            $.ajax({type: "GET",
-                url: "{{ url_for('main.search_query') }}"+`?query=${value}`,
-                success:function(result) {
-                    if (result != 0) {
-                        document.querySelector('#output').innerHTML = result;
-                    }
-                    $('#message-count').text
-                },
-                error:function(result) {
-                    alert('error');
-                }
-            });
-        }
-    }
-</script>
-<div id="output"></div>
-<input type="text" name="" id="search" onkeyup="javascript:makequery(this.value)">
+    {% endfor %}
+{% endif %}

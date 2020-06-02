@@ -98,7 +98,9 @@
         </div>
         <small>
             {% for country in article.country_tags %}
-                {{ country.name }}
+                <a href="{{ url_for('main.country_view', id=country.id) }}" class="country-ref">
+                    {{ country.name }}
+                </a>
             {% endfor %}
         </small>
         <div class="comment-top">
