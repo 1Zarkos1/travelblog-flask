@@ -10,7 +10,7 @@ from travelblog import db
 from travelblog.models import (User, Country, Article, Comment, Message,
                                user_follower_followed_relation
                                as user_fol_table, country_articletags_relation
-                               as coun_art_table)
+                               as coun_art_table, country_follower_relation)
 from travelblog.main.forms import (EditProfileForm, ArticleForm, CommentForm,
                                    MessageForm)
 
@@ -26,7 +26,6 @@ def before_request():
 @bp.route('/index/', methods=['GET', 'POST'])
 def index():
     page = request.args.get('page', 1, type=int)
-    print(request.method)
     if request.method == 'POST':
         session['feed'] = not session.get('feed', False)
         return redirect(url_for('main.index'))
@@ -34,35 +33,18 @@ def index():
         articles = Article.query.order_by(
             Article.date_posted.desc()).paginate(page=page, per_page=2)
     else:
-        fol_count = [country.id for country in current_user.followed_countries]
-        articles = db.session.query(Article).join(
-            user_fol_table, (user_fol_table.c.follower_id == current_user.id))\
-            .join(coun_art_table, (coun_art_table.c.article_id == Article.id))\
-            .filter((user_fol_table.c.followed_id == Article.user_id)
-                    | (coun_art_table.c.country_id.in_(fol_count))).distinct().order_by(
-            Article.date_posted.desc()).paginate(page=page, per_page=2)
+        users_art = db.session.query(Article.id).filter(
+            Article.user_id.in_(db.session.query(user_fol_table.c.followed_id)
+            .filter(user_fol_table.c.follower_id == current_user.id)))
+        count_art = (db.session.query(coun_art_table.c.article_id)
+                     .filter(coun_art_table.c.country_id.in_(db.session.query(
+                         country_follower_relation.c.country_id).filter(
+                         country_follower_relation.c.user_id == current_user.id)
+                     )).distinct())
+        articles = Article.query.filter(
+            Article.id.in_(users_art) | Article.id.in_(count_art)).paginate(
+            page=page, per_page=3)
     return render_template('index.html', articles=articles)
-
-
-# @bp.route('/feed/')
-# @login_required
-# def feed():
-#     # print(current_user.follows)
-#     page = request.args.get('page', 1, type=int)
-#     fol_count = [country.id for country in current_user.followed_countries]
-#     # print(Article.query.join(
-#     #     user_fol_table, (user_fol_table.c.follower_id == current_user.id)).join(
-#     #     coun_fol_table, (coun_fol_table.c.user_id == current_user.id)).filter(
-#     #     (user_fol_table.c.followed_id == Article.user_id) | (coun_fol_table.c.country_id.in_(fol_count))))
-#     articles = Article.query.join(
-#         user_fol_table, (user_fol_table.c.follower_id == current_user.id)).join(
-#         coun_art_table, (coun_art_table.c.article_id == Article.id)).filter(
-#         (user_fol_table.c.followed_id == Article.user_id)
-#         | (coun_art_table.c.country_id.in_(fol_count))).paginate(
-#         page=page, per_page=10)
-#     # articles = Article.query.filter(Article.article_author in (current_user.follows)).order_by(
-#     #     Article.date_posted.desc()).paginate(page=page, per_page=2)
-#     return render_template('index.html', articles=articles)
 
 
 @bp.route('/create_article/', methods=['GET', 'POST'])
@@ -73,7 +55,8 @@ def create_article():
         # country = Country.query.filter(
         #     Country.name.in_(form.country_tag.data)).all()
         article = Article(article_author=current_user,
-                          country_tags=form.country_tag.data, title=form.title.data,
+                          country_tags=form.country_tag.data, 
+                          title=form.title.data,
                           article_type=form.article_type.data,
                           body=form.hidden_body.raw_data[1])
         db.session.add(article)
@@ -337,10 +320,12 @@ def search_query():
     query = request.args.get('query', '')
     subject = request.args.get('subject', '')
     if query:
-        articles = Article.query.filter(Article.title.contains(query)).limit(3).all()
+        articles = Article.query.filter(
+            Article.title.contains(query)).limit(3).all()
         users = User.query.filter(User.username.contains(query)).limit(3).all()
-        countries = Country.query.filter(Country.name.contains(query)).limit(3).all()
+        countries = Country.query.filter(
+            Country.name.contains(query)).limit(3).all()
 
         return render_template('_search_query.html', articles=articles,
-                            countries=countries, users=users)
+                               countries=countries, users=users)
     return ''
