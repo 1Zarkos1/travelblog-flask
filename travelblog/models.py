@@ -12,7 +12,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from travelblog import db, login, admin
 
 
-country_visitor_relation = db.Table(
+country_visitor = db.Table(
     'country_visitor',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'),
               primary_key=True),
@@ -20,7 +20,7 @@ country_visitor_relation = db.Table(
               primary_key=True))
 
 
-country_follower_relation = db.Table(
+country_follower = db.Table(
     'country_follower',
     db.Column('user_id', db.Integer, db.ForeignKey('user.id'),
               primary_key=True),
@@ -28,7 +28,7 @@ country_follower_relation = db.Table(
               primary_key=True))
 
 
-country_articletags_relation = db.Table(
+country_tag = db.Table(
     'country_tag',
     db.Column('article_id', db.Integer, db.ForeignKey('article.id'),
               primary_key=True),
@@ -36,7 +36,7 @@ country_articletags_relation = db.Table(
               primary_key=True))
 
 
-user_article_like_relation = db.Table(
+article_likes = db.Table(
     'article_likes',
     db.Column('article_id', db.Integer, db.ForeignKey('article.id'),
               primary_key=True),
@@ -44,7 +44,7 @@ user_article_like_relation = db.Table(
               primary_key=True))
 
 
-user_follower_followed_relation = db.Table(
+user_followers = db.Table(
     'user_followers',
     db.Column('followed_id', db.Integer, db.ForeignKey('user.id'),
               primary_key=True),
@@ -52,7 +52,7 @@ user_follower_followed_relation = db.Table(
               primary_key=True))
 
 
-user_article_dislike_relation = db.Table(
+article_dislikes = db.Table(
     'article_dislikes',
     db.Column('article_id', db.Integer, db.ForeignKey('article.id'),
               primary_key=True),
@@ -73,33 +73,33 @@ class User(UserMixin, db.Model):
     articles = db.relationship('Article', backref='article_author')
 
     followers = db.relationship(
-        'User', secondary=user_follower_followed_relation,
-        primaryjoin=id==user_follower_followed_relation.c.followed_id,
-        secondaryjoin=id==user_follower_followed_relation.c.follower_id,
+        'User', secondary=user_followers,
+        primaryjoin=id == user_followers.c.followed_id,
+        secondaryjoin=id == user_followers.c.follower_id,
         backref='follows')
 
     sent_messages = db.relationship(
-        'Message', foreign_keys='Message.sender_id', lazy='dynamic', 
+        'Message', foreign_keys='Message.sender_id', lazy='dynamic',
         backref=db.backref('sender', lazy=True))
 
     received_messages = db.relationship(
-        'Message', foreign_keys='Message.recipient_id', lazy='dynamic', 
+        'Message', foreign_keys='Message.recipient_id', lazy='dynamic',
         backref=db.backref('recipient', lazy=True))
 
     followed_countries = db.relationship(
-        'Country', secondary=country_follower_relation, lazy=True,
+        'Country', secondary=country_follower, lazy=True,
         backref='followers')
 
     visited_countries = db.relationship(
-        'Country', secondary=country_visitor_relation, lazy=True,
+        'Country', secondary=country_visitor, lazy=True,
         backref='visitors')
 
     liked_articles = db.relationship(
-        'Article', secondary=user_article_like_relation, lazy=True,
+        'Article', secondary=article_likes, lazy=True,
         backref='likes')
 
     disliked_articles = db.relationship(
-        'Article', secondary=user_article_dislike_relation, lazy=True,
+        'Article', secondary=article_dislikes, lazy=True,
         backref='dislikes')
 
     role = db.relationship('Role', backref='user', uselist=False)
@@ -141,10 +141,14 @@ class UserInfo(db.Model):
     avatar = db.Column(db.String(120), default='default.png')
     gender = db.Column(db.String(1))
     job = db.Column(db.String(60))
-    origin_country = db.Column(db.String(60))
     about = db.Column(db.Text(600))
+    origin_country_id = db.Column(db.Integer, db.ForeignKey('country.id'))
     registration_date = db.Column(db.Date(), default=dt.utcnow)
     last_seen = db.Column(db.DateTime(), default=dt.utcnow)
+
+    origin_country = db.relationship(
+        'Country', lazy=True, uselist=False,
+        backref=db.backref('natives', uselist=True))
 
     def __repr__(self):
         return f'<Info about {self.user.username}>'
@@ -159,7 +163,7 @@ class Country(db.Model):
                            cascade='all')
 
     articles = db.relationship(
-        'Article', secondary=country_articletags_relation, lazy='dynamic',
+        'Article', secondary=country_tag, lazy='dynamic',
         backref='country_tags', cascade='all')
 
     def __repr__(self):
@@ -196,7 +200,7 @@ class Article(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     body = db.Column(db.Text(100000), nullable=False)
-    title = db.Column(db.String(200), nullable=False)
+    title = db.Column(db.String(200), index=True, nullable=False)
     article_type = db.Column(db.String(10))
     date_posted = db.Column(db.DateTime(), default=dt.utcnow)
     last_updated = db.Column(db.DateTime())

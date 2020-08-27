@@ -8,9 +8,7 @@ from flask_login import current_user, login_required
 from travelblog.main import bp
 from travelblog import db
 from travelblog.models import (User, Country, Article, Comment, Message,
-                               user_follower_followed_relation
-                               as user_fol_table, country_articletags_relation
-                               as coun_art_table, country_follower_relation)
+                               user_followers, country_tag, country_follower)
 from travelblog.main.forms import (EditProfileForm, ArticleForm, CommentForm,
                                    MessageForm)
 
@@ -34,12 +32,12 @@ def index():
             Article.date_posted.desc()).paginate(page=page, per_page=2)
     else:
         users_art = db.session.query(Article.id).filter(
-            Article.user_id.in_(db.session.query(user_fol_table.c.followed_id)
-            .filter(user_fol_table.c.follower_id == current_user.id)))
-        count_art = (db.session.query(coun_art_table.c.article_id)
-                     .filter(coun_art_table.c.country_id.in_(db.session.query(
-                         country_follower_relation.c.country_id).filter(
-                         country_follower_relation.c.user_id == current_user.id)
+            Article.user_id.in_(db.session.query(user_followers.c.followed_id)
+            .filter(user_followers.c.follower_id == current_user.id)))
+        count_art = (db.session.query(country_tag.c.article_id)
+                     .filter(country_tag.c.country_id.in_(db.session.query(
+                         country_follower.c.country_id).filter(
+                         country_follower.c.user_id == current_user.id)
                      )).distinct())
         articles = Article.query.filter(
             Article.id.in_(users_art) | Article.id.in_(count_art)).paginate(
@@ -52,8 +50,6 @@ def index():
 def create_article():
     form = ArticleForm()
     if form.validate_on_submit():
-        # country = Country.query.filter(
-        #     Country.name.in_(form.country_tag.data)).all()
         article = Article(article_author=current_user,
                           country_tags=form.country_tag.data, 
                           title=form.title.data,
